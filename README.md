@@ -1,3 +1,3 @@
 # We-Real-Cool
 
-this name is wack
+Runmin is wack
