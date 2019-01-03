@@ -1,56 +1,27 @@
 Team Members: Ivan Zhang, Simon Berens, William Lu
-Description: A database system through which:
-- teachers can post class notes, assign hw, and give grades
-- students can check class notes, homework, grades, and can also submit their homework to teachers
+Description: A simple CRUD database with its own language
+
+Features:
+- C like syntax (you heard that right, no more caps lock for writing SQL)
+- Remote connection
+- Save queries in files and execute them
 
 User Interface: 
-- Teacher: 
-0) Create an account or login with a username and password.
-1) Select one of their courses or add a course (using a unique code).
-2) Choose between 'Post Notes', 'Assign HW', and 'Assign Grades'.
-- If 'Post Notes': Will open a log of past notes and append to that DOC
-- If 'Assign HW': Will open a log of past assignments and append to that DOC
-- If 'Assign Grades': Teacher chooses from: 
-list of periods of that course => list of students => list of assignments for that student => inputs grade for chosen assignment.
-- Student: 
-0) Create an account or login with a username and password.
-1) Select one of their courses or add a course (using a unique code).
-2) Choose between 'Check Notes', 'Check Homework', 'Check Grades' and 'Submit Homework'.
-- If 'Check Notes': Open notes DOC of the course.
-- If 'Check Homework': Open homework DOC of the course.
-- If 'Submit Homework': Will prompt user for name of the file. Then will move file into the directory of that specific HW. File will be renamed in the format:
-'lastN_firstN-period#-timestamp'.
+First the database process will be initialized. After that, clients can connect and query the database via cli or files
 			
 Technical Design:
-- Allocating memory: malloc() and calloc() will be used.
-- Working with files: Will be moving files around directories as students upload homework. Will open, read, write, and append to files.
-- Finding info about files: Will look at timestamp of file when Student submits homework.
-- Processes: fork() and execvp() when moving files (submit hw)
-- Signals: properly closing the files with SIGINT
-- Pipes: send informations between teacher and student
-- Shared memory: Database containing student and teacher accounts
-- Semaphores: Used when creating teacher/student accounts
-- Networking: To manage connections from Teachers and Students
-- Data Structures: N/A
-- Algorithms: Quicksort/Mergesort to sort students/courses before they are shown on the screen
+- Allocating memory: malloc(), calloc(), and free() will be used.
+- Working with files: Read queries from files
+- Finding info about files: N/A
+- Processes: One master process for the database with client processes that connect to query it
+- Signals: Terminate database process through client
+- Pipes: Client-database connections
+- Shared memory: The semaphore will be in shared memory
+- Semaphores: Guaranteed concurrency safety
+- Networking: Remote connection to database
+- Data Structures: Custom types (time permitting)
+- Algorithms: Ability to sort data
 
 Timeline:
-Teacher Interface:
-0) Account Creation
-1) Login
-2) Add courses
-3) Select Courses
-4) Post Notes
-5) Assign Homework
-6) Assign Grades
 
-Student Interface:
-0) Account Creation
-1) Login
-2) Add courses
-3) Select Courses
-4) Check Notes
-5) Check Homework
-6) Check Grades
-7) Submit Homework
 
