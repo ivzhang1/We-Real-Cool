@@ -16,12 +16,12 @@ Technical Design:
 - Finding info about files: N/A
 - Processes: One master process for the database with client processes that connect to query it
 - Signals: Terminate database process through client
-- Pipes: Client-database connections
-- Shared memory: The semaphore will be in shared memory
+- Pipes: None
+- Shared memory: None
 - Semaphores: Guaranteed concurrency safety
 - Networking: Remote connection to database
-- Data Structures: Custom types (time permitting)
-- Algorithms: Ability to sort data
+- Data Structures: B+ tree, arrays, linked lists
+- Algorithms: Ability to sort data, will be implemented with quicksort
 
 Timeline:
 Determine syntax - 1/6/19
@@ -29,6 +29,6 @@ Connection between client and database - 1/6/19
 Send query from file to database - 1/6/19
 Working semaphores - 1/6/19
 Implement syntax - 1/13/19
-Sort data - 1/13/19
+Sort data and optimized structures such as B+ tree - 1/13/19
 User login functionality - 1/13/19
 Remote connection - 1/13/19
