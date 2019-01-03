@@ -5,6 +5,7 @@ Features:
 - C like syntax (you heard that right, no more caps lock for writing SQL)
 - Remote connection
 - Save queries in files and execute them
+- Users with tiered access ability
 
 User Interface: 
 First the database process will be initialized. After that, clients can connect and query the database via cli or files
@@ -23,5 +24,11 @@ Technical Design:
 - Algorithms: Ability to sort data
 
 Timeline:
-
-
+Determine syntax - 1/6/19
+Connection between client and database - 1/6/19
+Send query from file to database - 1/6/19
+Working semaphores - 1/6/19
+Implement syntax - 1/13/19
+Sort data - 1/13/19
+User login functionality - 1/13/19
+Remote connection - 1/13/19
