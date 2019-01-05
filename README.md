@@ -1,4 +1,5 @@
 # We-Real-Cool
+
 Ivan Zhang, Simon Berens, Runmin Lu (Period 4)
 
 Simple CRUD Database System in C
@@ -37,3 +38,4 @@ operations: `avg`, `max`, `min`
 - Delete
 
 `delete [from] <tablename> where <colname> = <val>;`
+
