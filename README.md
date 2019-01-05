@@ -56,7 +56,7 @@ For example, if a user is to have only read and update permissions, the permissi
 
 - Update Password
 
-`update <portnum>:<username> from <curpassword> to <newpassword>;`
+`update <portnum>:<username> to <password>;`
 
 - Update Port
 
