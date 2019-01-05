@@ -2,6 +2,9 @@
 CMakeLists.txt
 cmake-build-debug
 
+client
+database
+
 # Prerequisites
 *.d
 
