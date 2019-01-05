@@ -15,7 +15,7 @@ create <tablename> {
 ```
 types: `int`, `string(len)`
 
-tags: `-unique`, `autoinc`
+tags: `-unique`, `-autoinc`
 
 - Read
 
