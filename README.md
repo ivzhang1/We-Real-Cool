@@ -4,13 +4,13 @@ Ivan Zhang, Simon Berens, Runmin Lu (Period 4)
 
 Simple CRUD Database System in C
 
-### Syntax
+### Query Syntax
 - Create
 
 ```
 create <tablename> {
-    <type> <colname> [tags],
-    [<type> <colname> [tags],]
+    <type> <colname> [<tags>],
+    [<type> <colname> [<tags>],]
     ...
 };
 ```
@@ -39,3 +39,33 @@ operations: `avg`, `max`, `min`
 
 `delete [from] <tablename> where <colname> = <val>;`
 
+### Database Management Syntax
+- Create Database
+
+```
+create <portnum> {
+    <username> <password> [<permissions>],
+    [<username> <password> [<permissions>],]
+    ...
+};
+```
+
+permissions: in the format `crud`
+
+For example, if a user is to have only read and update permissions, the permissions would look like `-ru-`
+
+- Update Password
+
+`update <portnum>:<username> from <curpassword> to <newpassword>;`
+
+- Update Port
+
+`move <portnum> to <portnum>`
+
+- Delete Database
+
+`delete <portnum>;`
+
+- Delete User
+
+`remove <portnum>:<username>`
