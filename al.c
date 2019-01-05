@@ -83,4 +83,5 @@ int main(){
   printf("%d\n", get(al, 5));
   printf("%d\n", remov(al, 5));
   print_arr(al);
+  return 0;
 }
