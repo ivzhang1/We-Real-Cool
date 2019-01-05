@@ -28,6 +28,8 @@ read {
 [where <name> = <val>];
 ```
 
+operations: `avg`, `max`, `min`
+
 - Update
 
 `update <colname> from <tablename> to <val> where <colname> = <val>;`
