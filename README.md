@@ -39,8 +39,8 @@ operations: `avg`, `max`, `min`
 
 `delete from <tablename> where <colname> = <val>;`
 
-`drop <tablename>`
+`drop <tablename>;`
 
 - Load From File
 
-`source <filename>`
+`source <filename>;`
