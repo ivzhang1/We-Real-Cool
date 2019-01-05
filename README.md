@@ -37,35 +37,10 @@ operations: `avg`, `max`, `min`
 
 - Delete
 
-`delete [from] <tablename> where <colname> = <val>;`
+`delete from <tablename> where <colname> = <val>;`
 
-### Database Management Syntax
-- Create Database
+`drop <tablename>`
 
-```
-create <portnum> {
-    <username> <password> [<permissions>],
-    [<username> <password> [<permissions>],]
-    ...
-};
-```
+- Load From File
 
-permissions: in the format `crud`
-
-For example, if a user is to have only read and update permissions, the permissions would look like `-ru-`
-
-- Update Password
-
-`update <portnum>:<username> from <curpassword> to <newpassword>;`
-
-- Update Port
-
-`move <portnum> to <portnum>;`
-
-- Delete Database
-
-`delete <portnum>;`
-
-- Delete User
-
-`remove <portnum>:<username>;`
+`source <filename>`
