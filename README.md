@@ -60,7 +60,7 @@ For example, if a user is to have only read and update permissions, the permissi
 
 - Update Port
 
-`move <portnum> to <portnum>`
+`move <portnum> to <portnum>;`
 
 - Delete Database
 
@@ -68,4 +68,4 @@ For example, if a user is to have only read and update permissions, the permissi
 
 - Delete User
 
-`remove <portnum>:<username>`
+`remove <portnum>:<username>;`
