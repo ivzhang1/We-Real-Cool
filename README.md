@@ -13,7 +13,7 @@ create <tablename> {
     ...
 };
 ```
-types: `int`, `string(len)`
+types: `int`, `string(<len>)`
 
 tags: `-unique`, `-autoinc`
 
