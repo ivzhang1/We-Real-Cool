@@ -14,40 +14,51 @@ create <tablename> {
     ...
 };
 ```
-types: `int`, `string(<len>)`
+types: `int`, `double`, `string(<len>)`
 
-tags: `-unique`, `-autoinc`
+tags: `-primarykey`, `-autoinc`, `-foreignkey(<tablename>.<colname>)`, `default(<value>)`
 
 - Read
 
 ```
-read {
-    [$<operation>](<colname>) [as <name>],
-    [[$<operation>](<colname>) [as <name>],]
+read [all]OR[{
+    [$<operation>](<tablename>.<colname>) [as <name>],
+    [[$<operation>](<tablename>.<colname>) [as <name>],]
     ...
-} from <tablename>
-[where <name> = <val>];
+}] from <tablename> [{
+    <jointype> join <tablename> [on <expr>],
+    [<jointype> join <tablename> [on <expr>],]
+    ...
+}]
+[where <expr>]
+[group by <name>]
+[order by <name> [<order>]]
+[limit <num>];
 ```
 
 operations: `avg`, `max`, `min`
 
+expressions: `<name/val> == <name/val>`
+
+orders: `asc`, `dsc`
+
 - Insert
 
 ```
-insert <tablename> {
-    <value>,
-    <value>,
+insert {
+    (<colname>:<value>, [<colname>:<value>,] ...),
+    [(<colname>:<value>, [<colname>:<value>,] ...),]
     ...
-}
+} into <tablename>;
 ```
 
 - Update
 
-`update <colname> from <tablename> to <val> where <colname> = <val>;`
+`update <tablename>.<colname> to <val> where <expr>;`
 
 - Delete
 
-`delete from <tablename> where <colname> = <val>;`
+`delete <tablename>.<colname> where <expr>;`
 
 `drop <tablename>;`
 
