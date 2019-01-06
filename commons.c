@@ -1,10 +1,10 @@
 #include "commons.h"
 
 void print_table(struct table *t){
-    printf("Table: %s\n", t->name);
+    printf("Table: [%s]\n", t->name);
     printf("| ");
     for (int i = 0; i < t->num_columns; i ++)
-        printf("%s\t| ", t->names[i]);
+        printf("[%s]\t| ", t->names[i]);
     printf("\n");
 
     for (int i = 0; i < t->al.num_rows; i ++){
@@ -51,13 +51,17 @@ void create_table(char *str){
     int i;
     char **piece = calloc(DATA_SIZE, sizeof(char *));
     char **type = calloc(DATA_SIZE, sizeof(char *));
+
     for (i = 0; piece[i] = strsep(&data, ","); i ++){
         piece[i] = rs(piece[i]);
         type[i] = strsep(&piece[i], " ");
+        piece[i] = rs(piece[i]);
     }
+
     t->num_columns = i;
     t->types = calloc(i, sizeof(int));
     t->names = calloc(i, sizeof(char *));
+
     for (int j = 0; j < i; j ++){
         if ( !strcmp(type[j], "int") )
             t->types[j] = INT;
@@ -71,6 +75,7 @@ void create_table(char *str){
         }
         t->names[j] = piece[j];
     }
+
     print_table(t);
 }
 
@@ -107,8 +112,8 @@ void execute(char *str){
 }
 
 int main(){
-    char str[] = "  oof {int i, double d, string s} ";
-    create_table(str);
+    char str[] = "   create  oof  {  int   i  ,  double    d   ,  string   s  } ";
+    execute(str);
 
     return 0;
 }
