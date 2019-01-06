@@ -1,6 +1,6 @@
 # We-Real-Cool
 
-Ivan Zhang, Simon Berens, Runmin Lu (Period 4)
+Ivan Zhang, Simon Berens, William Lu (Period 4)
 
 Simple CRUD Database System in C
 
@@ -30,6 +30,16 @@ read {
 ```
 
 operations: `avg`, `max`, `min`
+
+- Insert
+
+```
+insert <tablename> {
+    <value>,
+    <value>,
+    ...
+}
+```
 
 - Update
 

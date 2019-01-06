@@ -1,5 +1,3 @@
-#include <stdio.h>
-#include <string.h>
 #include "commons.h"
 
 void prompt(char display[], char input[]) {

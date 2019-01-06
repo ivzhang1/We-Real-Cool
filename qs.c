@@ -1,5 +1,3 @@
-#include <stdio.h>
-#include <stdlib.h>
 #include "qs.h"
 
 void print_arr(int* arr, int size){

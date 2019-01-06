@@ -1,11 +1,4 @@
-#include <stdio.h>
-#include <stdlib.h>
-
-struct array_list {
-    int *arr;
-    int size;
-    int max_size;
-};
+#include "al.h"
 
 void construct(struct array_list *al){
     al->arr = calloc(10, sizeof(int));
@@ -14,7 +7,8 @@ void construct(struct array_list *al){
 }
 
 void print_arr(struct array_list *al){
-    for (int i = 0; i < al->size; i ++) printf("%d\n", al->arr[i]);
+    for (int i = 0; i < al->size; i ++)
+        printf("%d\n", al->arr[i]);
 }
 
 void expand(struct array_list *al){
@@ -51,7 +45,7 @@ void add(struct array_list *al, int index, int new_val){
     al->size ++;
 }
 
-int remov(struct array_list *al, int index){
+int delete(struct array_list *al, int index){
     int temp = al->arr[index];
     for(int i = index; i < al->size - 1; i ++)
         al->arr[i] = al->arr[i + 1];
