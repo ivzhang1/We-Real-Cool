@@ -41,6 +41,15 @@ char *rs(char *str){
     return str;
 }
 
+int hs(char *str){
+    while (*str){
+        if (!strncmp(str, " ", 1))
+            return 1;
+        str ++;
+    }
+    return 0;
+}
+
 void create_table(char *str, struct database *db){
     struct table *t = db->tables + db->num_tables;
     db->num_tables ++;
@@ -84,6 +93,39 @@ void create_table(char *str, struct database *db){
 }
 
 void read_table(char *str, struct database *db){
+    struct table *t = 0;
+    str = rs(str);
+    // printf("%s\n", db->tables[0].name);
+    // print_table(&(db->tables[0]));
+
+    if ( !strncmp(str, "all ", 4) ){
+        str += 4;
+        if ( strncmp(str, "from ", 5) ){
+            printf("invalid syntax\n");
+            return;
+        }
+
+        str += 5;
+        str = rs(str);
+
+        char *tname;
+        if (hs(str))
+            tname = strsep(&str, " ");
+        else
+            tname = str;
+
+        for (int i = 0; i < db->num_tables; i ++)
+            if ( !strcmp(db->tables[i].name, tname) )
+                t = db->tables + i;
+
+        if (!t){
+            printf("table does not exist\n");
+            return;
+        }
+
+        if (!hs(str))
+            print_table(t);
+    }
 
 }
 
@@ -92,8 +134,9 @@ void insert(char *str, struct database *db){
     str = rs(str);
     // printf("%s\n", db->tables[0].name);
     // print_table(&(db->tables[0]));
+    char *tname = rs( strsep(&str, "{") );
     for (int i = 0; i < db->num_tables; i ++)
-        if ( !strcmp(db->tables[i].name, rs( strsep(&str, "{") )) )
+        if ( !strcmp(db->tables[i].name, tname) )
             t = db->tables + i;
     if (!t){
         printf("table does not exist\n");
@@ -136,7 +179,22 @@ void delete(char *str, struct database *db){
 }
 
 void drop(char *str, struct database *db){
+    struct table *t = 0;
+    // printf("%s\n", db->tables[0].name);
+    // print_table(&(db->tables[0]));
     str = rs(str);
+    int i;
+    for (i = 0; i < db->num_tables; i ++)
+        if ( !strcmp(db->tables[i].name, str) )
+            t = db->tables + i;
+    if (!t){
+        printf("table does not exist\n");
+        return;
+    }
+
+    for (int j = i; j < db->num_tables - 1; j ++)
+        db->tables[i] = db->tables[i + 1];
+    db->num_tables --;
 }
 
 void execute(char *str, struct database *db){
@@ -168,7 +226,12 @@ int main(){
     execute(ins, db);
     print_table(&(db->tables[0]));
 
-    // print_table(&(db->tables[0]));
+    // char dr[] = " drop   oof   ";
+    // execute(dr, db);
+    // execute(ins, db);
+
+    char rd[] = " read   all from  oof  ";
+    execute(rd, db);
 
     return 0;
 }
