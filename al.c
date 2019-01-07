@@ -19,21 +19,23 @@ struct row *get(struct array_list *al, int index){
     return al->rows + index;
 }
 
-struct row set(struct array_list *al, int index, struct row new_row){
+struct row set(struct array_list *al, int index, struct row *new_row){
     struct row temp = al->rows[index];
-    al->rows[index] = new_row;
+    al->rows[index] = *new_row;
+    free(new_row);
     return temp;
 }
 
-void add_last(struct array_list *al, struct row new_row){
+void add_last(struct array_list *al, struct row *new_row){
     if (al->num_rows >= al->max_size)
         expand(al);
 
-    al->rows[ al->num_rows ] = new_row;
+    al->rows[ al->num_rows ] = *new_row;
+    free(new_row);
     al->num_rows ++;
 }
 
-void add(struct array_list *al, int index, struct row new_row){
+void add(struct array_list *al, int index, struct row *new_row){
     if (index < 0 || index >= al->num_rows){
         printf("Index Out of Bound\n");
         return;
@@ -45,7 +47,8 @@ void add(struct array_list *al, int index, struct row new_row){
     for (int i = al->num_rows; i > index; i --)
         al->rows[i] = al->rows[i - 1];
 
-    al->rows[index] = new_row;
+    al->rows[index] = *new_row;
+    free(new_row);
     al->num_rows ++;
 }
 

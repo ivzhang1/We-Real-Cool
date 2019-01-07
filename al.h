@@ -23,10 +23,10 @@ void expand(struct array_list *al);
 
 struct row *get(struct array_list *al, int index);
 
-struct row set(struct array_list *al, int index, struct row new_row);
+struct row set(struct array_list *al, int index, struct row *new_row);
 
-void add_last(struct array_list *al, struct row new_row);
+void add_last(struct array_list *al, struct row *new_row);
 
-void add(struct array_list *al, int index, struct row new_row);
+void add(struct array_list *al, int index, struct row *new_row);
 
 struct row remov(struct array_list *al, int index);

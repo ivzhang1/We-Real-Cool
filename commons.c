@@ -4,18 +4,18 @@ void print_table(struct table *t){
     printf("Table: [%s]\n", t->name);
     printf("| ");
     for (int i = 0; i < t->num_columns; i ++)
-        printf("[%s]\t| ", t->names[i]);
+        printf("[%s] | ", t->names[i]);
     printf("\n");
 
     for (int i = 0; i < t->al.num_rows; i ++){
         printf("| ");
         for (int j = 0; j < t->num_columns; j ++)
             if (t->types[j] == INT)
-                printf("[%d]\t| ", t->al.rows[i].values[j].integer);
+                printf("[%d] | ", get(&(t->al), i)->values[j].integer);
             else if (t->types[j] == DOUBLE)
-                printf("[%lf]\t| ", t->al.rows[i].values[j].decimal);
+                printf("[%lf] | ", get(&(t->al), i)->values[j].decimal);
             else if (t->types[j] == STRING)
-                printf("[%s]\t| ", t->al.rows[i].values[j].string);
+                printf("[%s] | ", get(&(t->al), i)->values[j].string);
         printf("\n");
     }
 }
@@ -77,8 +77,10 @@ void create_table(char *str, struct database *db){
         }
         t->names[j] = piece[j];
     }
-    print_table(t);
+    // print_table(t);
     // return t;
+    free(piece);
+    free(type);
 }
 
 void read_table(char *str, struct database *db){
@@ -99,6 +101,7 @@ void insert(char *str, struct database *db){
     }
     char *data = strsep(&str, "}");
     char *row, *piece;
+    struct row *r;
     while (strsep(&data, "(") && data){
         row = strsep(&data, ")");
         // printf("[%s]\n", row);
@@ -106,8 +109,8 @@ void insert(char *str, struct database *db){
             printf("missing closing '('\n");
             return;
         }
-        struct row r;
-        r.values = calloc(t->num_columns, sizeof(union value));
+        r = malloc(sizeof(struct row));
+        r->values = calloc(t->num_columns, sizeof(union value));
         // r = malloc(sizeof(struct row));
         for (int i = 0; i < t->num_columns; i ++){
             piece = rs( strsep(&row, ",") );
@@ -117,11 +120,11 @@ void insert(char *str, struct database *db){
                 return;
             }
             if (t->types[i] == INT)
-                r.values[i].integer = atoi(piece);
+                r->values[i].integer = atoi(piece);
             else if (t->types[i] == DOUBLE)
-                r.values[i].decimal = atof(piece);
+                r->values[i].decimal = atof(piece);
             else if (t->types[i] == STRING)
-                r.values[i].string = piece;
+                r->values[i].string = piece;
         }
         add_last(&(t->al), r);
         // printf("[%s]\n", data);
@@ -159,8 +162,9 @@ int main(){
     db->num_tables = 0;
     char str[] = "   create  oof  {  int   i  ,  double    d   ,  string   s  } ";
     execute(str, db);
+    print_table(&(db->tables[0]));
 
-    char ins[] = "  insert    oof  {  (  3 , 6.9 , lmao ) (   5, 3.14  , UwU )   }";
+    char ins[] = "  insert    oof  {  (  3 , 6.9 , lmao ) (   5, 3.14  , UwU )  (1024 ,  2.718 ,  xD ) }";
     execute(ins, db);
     print_table(&(db->tables[0]));
 
