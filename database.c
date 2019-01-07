@@ -19,21 +19,25 @@ int main(int argc, char * argv[]) {
     strcpy(port, argv[1]);
     // setup socket on port
     struct addrinfo * results;
-    int sd = get_results_and_socket(NULL, port, &results);
-    error_check(bind(sd, results->ai_addr, results->ai_addrlen));
-    error_check(listen(sd, 100));
+    int main_sd = get_results_and_socket(NULL, port, &results);
+    error_check(bind(main_sd, results->ai_addr, results->ai_addrlen));
+    error_check(listen(main_sd, 100));
     // setup semaphore
     int sem_id = error_check(semget(KEY, 1, IPC_CREAT | 0644));
     // server time
     while (1) {
         socklen_t sock_size;
         struct sockaddr_storage client_address;
-        printf("waiting...\n");
-        int client_socket = accept(sd, (struct sockaddr *)&client_address, &sock_size);
-        printf("connected\n");
-        /*
-         * Actual stuff here
-         * */
+        int client_sd = error_check(accept(main_sd, (struct sockaddr *)&client_address, &sock_size));
+        printf("[server %d] connected to client\n", getpid());
+        if (!fork()) { // child
+            close(main_sd);
+            /*
+             * Do stuff here
+             * */
+            exit(0);
+        } else close(client_sd);
+
         return 0;
     }
 }
