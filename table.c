@@ -100,8 +100,40 @@ void create_table(char *str, struct database *db){
     free(type);
 }
 
+void read_spec(struct table *t, char *expr){
+    char *col = rs(strsep(&expr, "="));
+    expr = rs(expr);
+    // union value val;
+    int i;
+    for (i = 0; i < t->num_columns; i ++)
+        if ( !strcmp(t->names[i], col) )
+            break;
+    if (i == t->num_columns){
+        printf("column does not exist\n");
+        return;
+    }
+    if (t->types[i] == INT) {
+        int val = atoi(expr);
+        for (int j = 0; j < t->al.num_rows; j ++)
+            if (val == get(&(t->al), j).values[i].integer)
+                print_row(t, j);
+    }
+        // val.integer = atoi(expr);
+    else if (t->types[i] == DOUBLE) {
+        double val = atof(expr);
+        for (int j = 0; j < t->al.num_rows; j ++)
+            if (val == get(&(t->al), j).values[i].decimal)
+                print_row(t, j);
+    }
+        // val.decimal = atof(expr);
+    else if (t->types[i] == STRING)
+        for (int j = 0; j < t->al.num_rows; j ++)
+            if ( !strcmp(expr, get(&(t->al), j).values[i].string) )
+                print_row(t, j);
+}
+
 void read_table(char *str, struct database *db){
-    
+
     str = rs(str);
     // printf("%s\n", db->tables[0].name);
     // print_table(&(db->tables[0]));
@@ -122,44 +154,11 @@ void read_table(char *str, struct database *db){
         }
         strsep(&str, " ");
         str = rs(str);
-        char *piece, *keyword;
+        char *piece;
         while (piece = strsep(&str, ",")){
             piece = rs(piece);
-            keyword = strsep(&piece, " ");
-            piece = rs(piece);
-            if ( !strcmp( keyword, "where") ){
-                char *col = strsep(&piece, "=");
-                rs(col);
-                piece = rs(piece);
-                // union value val;
-                int i;
-                for (i = 0; i < t->num_columns; i ++)
-                    if ( !strcmp(t->names[i], col) )
-                        break;
-                if (i == t->num_columns){
-                    printf("column does not exist\n");
-                    return;
-                }
-                if (t->types[i] == INT) {
-                    int val = atoi(piece);
-                    for (int j = 0; j < t->al.num_rows; j ++)
-                        if (val == get(&(t->al), j).values[i].integer)
-                            print_row(t, j);
-                }
-                    // val.integer = atoi(piece);
-                else if (t->types[i] == DOUBLE) {
-                    double val = atof(piece);
-                    for (int j = 0; j < t->al.num_rows; j ++)
-                        if (val == get(&(t->al), j).values[i].decimal)
-                            print_row(t, j);
-                }
-                    // val.decimal = atof(piece);
-                else if (t->types[i] == STRING)
-                    for (int j = 0; j < t->al.num_rows; j ++)
-                        if ( !strcmp(piece, get(&(t->al), j).values[i].string) )
-                            print_row(t, j);
-
-                    // val.decimal = piece;
+            if ( !strncmp(piece, "where ", 6) ){
+                read_spec(t, piece + 6);
             }
         }
         strsep(&str, " ");
@@ -169,7 +168,7 @@ void read_table(char *str, struct database *db){
 }
 
 void insert(char *str, struct database *db){
-    
+
     str = rs(str);
     // printf("%s\n", db->tables[0].name);
     // print_table(&(db->tables[0]));
@@ -213,14 +212,14 @@ void insert(char *str, struct database *db){
 }
 
 void delete(char *str, struct database *db){
-  str = rs(str);
-  char *tname = rs( strsep(&str, "{") );
+    str = rs(str);
+    char *tname = rs( strsep(&str, " ") );
     struct table *t = get_table(tname, db);
     if (!t){
         printf("table does not exist\n");
         return;
     }
-    
+
 }
 
 void drop(char *str, struct database *db){
@@ -243,17 +242,19 @@ void drop(char *str, struct database *db){
 }
 
 void sort(char *str, struct database *db){
-    struct table *t = 0;
     str = rs(str);
     char *tname = strsep(&str, " ");
-    for (int i = 0; i < db->num_tables; i ++)
-        if ( !strcmp(db->tables[i].name, tname) )
-            t = db->tables + i;
+    struct table *t = get_table(tname, db);
     if (!t){
         printf("table does not exist\n");
         return;
     }
-    char *col = rs(str);
+    str = rs(str);
+    if ( strncmp(str, "by ", 3) ){
+        printf("invalid syntax\n");
+        return;
+    }
+    char *col = rs(str + 3);
     // printf("%s\n", t->names[3]);
     for (int i = 0; i < t->num_columns; i ++){
         printf("[%s]\n", t->names[i]);
@@ -305,7 +306,7 @@ int main(){
     char rd[] = " read   oof   all where  i  =  5 ";
     execute(rd, db);
 
-    char st[] = "  sort  oof   s ";
+    char st[] = "  sort  oof by  d ";
     execute(st, db);
     // execute(rd, db);
     print_table(&(db->tables[0]));

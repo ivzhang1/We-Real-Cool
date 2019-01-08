@@ -27,7 +27,7 @@ int partition(struct array_list *al, int lo, int hi, int col, int type){
         for (int i = lo; i < hi; i ++)
             // printf("%lf, %lf", get(al, i).values[col].decimal, v.decimal);
             if (get(al, i).values[col].decimal < v.decimal){
-                printf("#");
+                // printf("#");
                 swap(al, i, s);
                 s ++;
             }

@@ -21,7 +21,7 @@ tags: `-primarykey`, `-autoinc`, `-foreignkey(<tablename>.<colname>)`, `default(
 - Read
 
 ```
-read from <tablename> [{
+read <tablename> [{
     <jointype> join <tablename> [on <expr>],
     [<jointype> join <tablename> [on <expr>],]
     ...
@@ -29,7 +29,7 @@ read from <tablename> [{
     [$<operation>](<tablename>.<colname>) [as <name>],
     [[$<operation>](<tablename>.<colname>) [as <name>],]
     ...
-}] 
+}]
 [where <expr>]
 [group by <name>]
 [order by <name> [<order>]]
@@ -45,7 +45,7 @@ orders: `asc`, `dsc`
 - Insert
 
 ```
-insert into <tablename> {
+insert <tablename> {
     (<colname>:<value>, [<colname>:<value>,] ...),
     [(<colname>:<value>, [<colname>:<value>,] ...),]
     ...
@@ -58,7 +58,7 @@ insert into <tablename> {
 
 - Delete
 
-`delete <tablename>.<row_name> where <expr>;`
+`delete <tablename> where <expr>;`
 
 `drop <tablename>;`
 
