@@ -28,9 +28,9 @@ int error_check(char *msg, int retval) {
 void get_results(char *ip, char *port, struct addrinfo **results_list) {
     struct addrinfo *hints;
     hints = (struct addrinfo *) calloc(1, sizeof(struct addrinfo));
-    hints->ai_family = AF_INET;
+    hints->ai_family = AF_UNSPEC;
     hints->ai_socktype = SOCK_STREAM; // TCP socket
-    if (ip) hints->ai_flags = AI_PASSIVE; // only needed on server
+    if (!ip) hints->ai_flags = AI_PASSIVE; // only needed on server
     int status = getaddrinfo(ip, port, hints, results_list);
     freeaddrinfo(hints);
     if (status != 0) {

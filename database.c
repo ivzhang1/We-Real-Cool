@@ -47,8 +47,8 @@ int server_setup(char *port) {
 }
 
 int get_client(int listening_sd) {
-    socklen_t sock_size;
     struct sockaddr_storage client_address;
+    socklen_t sock_size = sizeof(client_address);
     int client_sd = error_check("accepting",
                                 accept(listening_sd, (struct sockaddr *) &client_address, &sock_size));
     printf("[server %d] connected to client\n", getpid());
