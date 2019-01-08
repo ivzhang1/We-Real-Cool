@@ -10,6 +10,17 @@ void prompt(char *display, char *input) {
     input[strlen(input) - 1] = '\0'; // strip newline
 }
 
+char **check_input(int argc, char **argv, int num_inputs, char *format) {
+    if (argc - 1 != num_inputs) {
+        printf("Format: [%s]\n", format);
+        exit(1);
+    } else {
+        char **vars = calloc((size_t) num_inputs, sizeof(char *));
+        for (int i = 0; i < num_inputs; ++i) vars[i] = argv[i + 1];
+        return vars;
+    }
+}
+
 int error_check(char *msg, int retval) {
     if (retval == -1) {
         printf("%s error: [%s]\n", msg, strerror(errno));
@@ -27,7 +38,7 @@ int get_results_and_socket(char *ip, char *port, struct addrinfo **results_list)
     int status = getaddrinfo(ip, port, hints, results_list);
     freeaddrinfo(hints);
     if (status != 0) {
-        fprintf(stderr, "getaddrinfo error: %s\n", gai_strerror(status));
+        fprintf(stderr, "getaddrinfo error: [%s]\n", gai_strerror(status));
         exit(1);
     }
     return error_check(
