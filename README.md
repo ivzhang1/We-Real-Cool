@@ -58,7 +58,7 @@ insert into <tablename> {
 
 - Delete
 
-`delete <tablename>.<colname> where <expr>;`
+`delete <tablename>.<row_name> where <expr>;`
 
 `drop <tablename>;`
 
