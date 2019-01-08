@@ -34,7 +34,7 @@ int connect_to_db(char *ip, char *port) {
         break;
     }
     if (!p) {
-        printf("No valid connections found");
+        printf("No valid connections found\n");
         exit(1);
     }
     freeaddrinfo(results);
@@ -52,8 +52,8 @@ char *get_query() {
     prompt("Enter query: ", query_buf);
     // check if loading from file
     if (!strncmp(query_buf, "source", 6)) {
-        int fd = open(&(query_buf[7]), O_RDONLY);
-        read(fd, query_buf, BUFFER_SIZE);
+        int fd = error_check("loading file", open(&(query_buf[7]), O_RDONLY));
+        query_buf[read(fd, query_buf, BUFFER_SIZE)] = '\0';
     }
     return query_buf;
 }
