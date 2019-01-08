@@ -1,5 +1,17 @@
 #include "commons.h"
 
+void print_row(struct table *t, int index){
+    printf("| ");
+    for (int i = 0; i < t->num_columns; i ++)
+        if (t->types[i] == INT)
+            printf("[%d] | ", get(&(t->al), index).values[i].integer);
+        else if (t->types[i] == DOUBLE)
+            printf("[%lf] | ", get(&(t->al), index).values[i].decimal);
+        else if (t->types[i] == STRING)
+            printf("[%s] | ", get(&(t->al), index).values[i].string);
+    printf("\n");
+}
+
 void print_table(struct table *t){
     printf("Table: [%s]\n", t->name);
     printf("| ");
@@ -8,15 +20,8 @@ void print_table(struct table *t){
     printf("\n");
 
     for (int i = 0; i < t->al.num_rows; i ++){
-        printf("| ");
-        for (int j = 0; j < t->num_columns; j ++)
-            if (t->types[j] == INT)
-                printf("[%d] | ", get(&(t->al), i)->values[j].integer);
-            else if (t->types[j] == DOUBLE)
-                printf("[%lf] | ", get(&(t->al), i)->values[j].decimal);
-            else if (t->types[j] == STRING)
-                printf("[%s] | ", get(&(t->al), i)->values[j].string);
-        printf("\n");
+        print_row(t, i);
+        // printf("\n");
     }
 }
 
@@ -97,34 +102,68 @@ void read_table(char *str, struct database *db){
     str = rs(str);
     // printf("%s\n", db->tables[0].name);
     // print_table(&(db->tables[0]));
-
-    if ( !strncmp(str, "all ", 4) ){
-        str += 4;
-        if ( strncmp(str, "from ", 5) ){
-            printf("invalid syntax\n");
-            return;
-        }
-
-        str += 5;
-        str = rs(str);
-
-        char *tname;
-        if (hs(str))
-            tname = strsep(&str, " ");
-        else
-            tname = str;
-
-        for (int i = 0; i < db->num_tables; i ++)
-            if ( !strcmp(db->tables[i].name, tname) )
-                t = db->tables + i;
-
-        if (!t){
-            printf("table does not exist\n");
-            return;
-        }
-
-        if (!hs(str))
+    // printf("[%s]\n", str);
+    char *tname = strsep(&str, " {");
+    tname = rs(tname);
+    for (int i = 0; i < db->num_tables; i ++)
+        if ( !strcmp(db->tables[i].name, tname) )
+            t = db->tables + i;
+    if (!t){
+        printf("table does not exist\n");
+        return;
+    }
+    // printf("[%s]\n", str);
+    str = rs(str);
+    // printf("[%s]\n", str);
+    if ( !strncmp(str, "all", 3) ){
+        if ( !*(str + 4) ){
             print_table(t);
+            return;
+        }
+        strsep(&str, " ");
+        str = rs(str);
+        char *piece, *keyword;
+        while (piece = strsep(&str, ",")){
+            piece = rs(piece);
+            keyword = strsep(&piece, " ");
+            piece = rs(piece);
+            if ( !strcmp( keyword, "where") ){
+                char *col = strsep(&piece, "=");
+                rs(col);
+                piece = rs(piece);
+                // union value val;
+                int i;
+                for (i = 0; i < t->num_columns; i ++)
+                    if ( !strcmp(t->names[i], col) )
+                        break;
+                if (i == t->num_columns){
+                    printf("column does not exist\n");
+                    return;
+                }
+                if (t->types[i] == INT) {
+                    int val = atoi(piece);
+                    for (int j = 0; j < t->al.num_rows; j ++)
+                        if (val == get(&(t->al), j).values[i].integer)
+                            print_row(t, j);
+                }
+                    // val.integer = atoi(piece);
+                else if (t->types[i] == DOUBLE) {
+                    double val = atof(piece);
+                    for (int j = 0; j < t->al.num_rows; j ++)
+                        if (val == get(&(t->al), j).values[i].decimal)
+                            print_row(t, j);
+                }
+                    // val.decimal = atof(piece);
+                else if (t->types[i] == STRING)
+                    for (int j = 0; j < t->al.num_rows; j ++)
+                        if ( !strcmp(piece, get(&(t->al), j).values[i].string) )
+                            print_row(t, j);
+
+                    // val.decimal = piece;
+            }
+        }
+        strsep(&str, " ");
+
     }
 
 }
@@ -169,7 +208,8 @@ void insert(char *str, struct database *db){
             else if (t->types[i] == STRING)
                 r->values[i].string = piece;
         }
-        add_last(&(t->al), r);
+        add_last(&(t->al), *r);
+        free(r);
         // printf("[%s]\n", data);
     }
 }
@@ -197,6 +237,30 @@ void drop(char *str, struct database *db){
     db->num_tables --;
 }
 
+void sort(char *str, struct database *db){
+    struct table *t = 0;
+    str = rs(str);
+    char *tname = strsep(&str, " ");
+    for (int i = 0; i < db->num_tables; i ++)
+        if ( !strcmp(db->tables[i].name, tname) )
+            t = db->tables + i;
+    if (!t){
+        printf("table does not exist\n");
+        return;
+    }
+    char *col = rs(str);
+    // printf("%s\n", t->names[3]);
+    for (int i = 0; i < t->num_columns; i ++){
+        printf("[%s]\n", t->names[i]);
+        if (!strcmp(col, t->names[i])){
+            quick_sort(&(t->al), i, t->types[i]);
+            return;
+        }
+    }
+    // printf("[%s]\n", col);
+    printf("column does not exist\n");
+}
+
 void execute(char *str, struct database *db){
     str = rs(str);
     if (!strncmp(str, "create ", 7))
@@ -209,6 +273,8 @@ void execute(char *str, struct database *db){
         delete(str + 7, db);
     else if (!strncmp(str, "drop ", 5))
         drop(str + 5, db);
+    else if (!strncmp(str, "sort ", 5))
+        sort(str + 5, db);
     else
         printf("Invalid Command\n");
 }
@@ -220,18 +286,24 @@ int main(){
     db->num_tables = 0;
     char str[] = "   create  oof  {  int   i  ,  double    d   ,  string   s  } ";
     execute(str, db);
-    print_table(&(db->tables[0]));
+    // print_table(&(db->tables[0]));
 
-    char ins[] = "  insert    oof  {  (  3 , 6.9 , lmao ) (   5, 3.14  , UwU )  (1024 ,  2.718 ,  xD ) }";
+    char ins[] = "  insert    oof  {  (1024 ,  2.718 ,  xD ) (   5, 91.7  , smd ) (  3 , 6.9 , lmao ) (   5, 3.14  , UwU )  }";
     execute(ins, db);
-    print_table(&(db->tables[0]));
+    // print_table(&(db->tables[0]));
 
     // char dr[] = " drop   oof   ";
     // execute(dr, db);
     // execute(ins, db);
 
-    char rd[] = " read   all from  oof  ";
+    char rd[] = " read   oof   all where  i  =  5 ";
     execute(rd, db);
+
+    char st[] = "  sort  oof   s ";
+    execute(st, db);
+    // execute(rd, db);
+    print_table(&(db->tables[0]));
+
 
     return 0;
 }

@@ -7,6 +7,7 @@
 #include <sys/types.h>
 
 #include "al.h"
+#include "qs.h"
 
 #define KEY 52013
 
@@ -25,10 +26,6 @@
 #define MAX 1
 #define MIN 2
 
-#define INT 0
-#define DOUBLE 1
-#define STRING 2
-
 struct table {
     char name[DATA_SIZE];
     int *types;
@@ -42,12 +39,16 @@ struct database {
     int num_tables;
 };
 
+void print_row(struct table *t, int index);
+
 void print_table(struct table *t);
 
 void prompt(char display[], char input[]);
 
 //removes begining and ending spaces
 char *rs(char *str);
+
+int hs(char *str);
 
 void create_table(char *str, struct database *db);
 
@@ -58,5 +59,7 @@ void insert(char *str, struct database *db);
 void delete(char *str, struct database *db);
 
 void drop(char *str, struct database *db);
+
+void sort(char *str, struct database *db);
 
 void execute(char *str, struct database *db);
