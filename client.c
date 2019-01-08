@@ -22,7 +22,8 @@ int main(int argc, char * argv[]) {
     // connect to db
     struct addrinfo* results;
     int sd = get_results_and_socket(ip, port, &results);
-    int c = error_check(connect(sd, results->ai_addr, results->ai_addrlen));
+    freeaddrinfo(results);
+    int c = error_check("connecting", connect(sd, results->ai_addr, results->ai_addrlen));
     printf("connected\n");
     while (1) {
         /*

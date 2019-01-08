@@ -5,6 +5,6 @@
 
 void prompt(char *display, char *input);
 
-int error_check(int retval);
+int error_check(char *msg, int retval);
 
 int get_results_and_socket(char *ip, char *port, struct addrinfo **results_list);

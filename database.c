@@ -20,15 +20,16 @@ int main(int argc, char * argv[]) {
     // setup socket on port
     struct addrinfo * results;
     int main_sd = get_results_and_socket(NULL, port, &results);
-    error_check(bind(main_sd, results->ai_addr, results->ai_addrlen));
-    error_check(listen(main_sd, 100));
+    error_check("binding", bind(main_sd, results->ai_addr, results->ai_addrlen));
+    freeaddrinfo(results);
+    error_check("listening", listen(main_sd, 100));
     // setup semaphore
-    int sem_id = error_check(semget(KEY, 1, IPC_CREAT | 0644));
+    int sem_id = error_check("creating semaphore", semget(KEY, 1, IPC_CREAT | 0644));
     // server time
     while (1) {
         socklen_t sock_size;
         struct sockaddr_storage client_address;
-        int client_sd = error_check(accept(main_sd, (struct sockaddr *)&client_address, &sock_size));
+        int client_sd = error_check("accepting", accept(main_sd, (struct sockaddr *) &client_address, &sock_size));
         printf("[server %d] connected to client\n", getpid());
         if (!fork()) { // child
             close(main_sd);
