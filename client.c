@@ -1,44 +1,30 @@
 #include <stdio.h>
-#include <stdlib.h>
-
+#include <unistd.h>
+#include <sys/socket.h>
+#include <netdb.h>
 #include "client.h"
 #include "commons.h"
 
 int main(int argc, char * argv[]) {
-    /*
-     * Prompt ip:port (if not given)
-     * Connect to socket
-     * always:
-     *      Prompt for input
-     *      Check if loading from file
-     *      send to database
-     * */
-     char input[STR_LEN];
-     char* piece;
-     char* dummy;
-     int s;
+    char **vars = check_input(argc, argv, 2, "./client <ip> <port>");
+    char *ip = vars[0];
+    char *port = vars[1];
+    int db_sd = connect_to_db(ip, port);
+    while (1) {
+        query(db_sd); // do stuff!
+        return 0;
+    }
+}
 
-     // signal(SIGINT, sighandler);
-     while (1){
+int connect_to_db(char *ip, char *port) {
+    struct addrinfo *results;
+    int sd = get_results_and_socket(ip, port, &results);
+    freeaddrinfo(results);
+    int db_sd = error_check("connecting", connect(sd, results->ai_addr, results->ai_addrlen));
+    printf("connected\n");
+    return db_sd;
+}
 
-         getcwd(cwd, STR_LEN);
-         printf("%s> ", cwd);
-         scanf(" %[^\n]s", input);
+void query(int db_sd) {
 
-
-         dummy = input;
-         while (piece = strsep(&dummy, ";")){
-
-             args = parse_args(piece);
-             s = execute(args);
-             if (s > 0)
-                 printf("%s\n", strerror(s));
-             if (s == -2)
-                 break;
-             if (s == -3)
-                 return 0;
-         }
-     }
-
-     return 0;
 }
