@@ -58,5 +58,5 @@ int get_client(int listening_sd) {
 void fulfill(int client_sd, int sem_id) {
     char query_buf[BUFFER_SIZE];
     error_check("receiving", (int) recv(client_sd, query_buf, sizeof(query_buf), 0));
-    printf("%s\n", query_buf);
+    printf("[subserver %d] received %s\n", getpid(), query_buf);
 }
