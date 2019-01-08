@@ -253,6 +253,7 @@ void sort(char *str, struct database *db){
     for (int i = 0; i < t->num_columns; i ++){
         printf("[%s]\n", t->names[i]);
         if (!strcmp(col, t->names[i])){
+            // printf("%d", t->types[i]);
             quick_sort(&(t->al), i, t->types[i]);
             return;
         }

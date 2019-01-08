@@ -2,33 +2,43 @@
 
 void swap(struct array_list *al, int a, int b){
     set(al, a, set(al, b, get(al, a)));
-    printf("#");
 }
 
 int partition(struct array_list *al, int lo, int hi, int col, int type){
     union value v = get(al, lo).values[col];
-
+    // printf("%lf\n", v.decimal);
+    // printf("%lf\n", get(al, 3).values[col].decimal);
+    // printf("%d\n", type == INT);
+    // if (type == DOUBLE){
+    //     printf("#");
+    // }
     swap(al, lo, hi);
     int s = lo;
 
-    if (type == INT)
+    if (type == INT){
         for (int i = lo; i < hi; i ++)
             if (get(al, i).values[col].integer < v.integer){
                 swap(al, i, s);
                 s ++;
             }
-    else if (type == DOUBLE)
+    }
+    else if (type == DOUBLE){
+        // printf("%d\n", type);
         for (int i = lo; i < hi; i ++)
+            // printf("%lf, %lf", get(al, i).values[col].decimal, v.decimal);
             if (get(al, i).values[col].decimal < v.decimal){
+                printf("#");
                 swap(al, i, s);
                 s ++;
             }
-    else if (type == STRING)
+    }
+    else if (type == STRING){
         for (int i = lo; i < hi; i ++)
             if ( strcmp(get(al, i).values[col].string, v.string) < 0){
                 swap(al, i, s);
                 s ++;
             }
+    }
 
     swap(al, s, hi);
     return s;
