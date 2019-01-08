@@ -1,54 +1,62 @@
 #include "al.h"
 
 void construct(struct array_list *al){
-    al->arr = calloc(10, sizeof(int));
-    al->size = 0;
+    al->rows = calloc(10, sizeof(struct row));
+    al->num_rows = 0;
     al->max_size = 10;
 }
 
-void print_arr(struct array_list *al){
-    for (int i = 0; i < al->size; i ++)
-        printf("%d\n", al->arr[i]);
-}
-
 void expand(struct array_list *al){
-    al->arr = realloc(al->arr, al->max_size * 2 * sizeof(int));
+    al->rows = realloc(al->rows, al->max_size * 2 * sizeof(struct row));
     al->max_size *= 2;
 }
 
-int get(struct array_list *al, int index){
-    return al->arr[index];
+struct row get(struct array_list *al, int index){
+    if (index < 0 || index >= al->num_rows){
+        printf("Index Out of Bound\n");
+        struct row r;
+        return r;
+    }
+    return al->rows[index];
 }
 
-int set(struct array_list *al, int index, int new_val){
-    int temp = al->arr[index];
-    al->arr[index] = new_val;
+struct row set(struct array_list *al, int index, struct row new_row){
+    struct row temp = al->rows[index];
+    al->rows[index] = new_row;
+    // free(new_row);
     return temp;
 }
 
-void add_last(struct array_list *al, int new_val){
-    if (al->size >= al->max_size)
+void add_last(struct array_list *al, struct row new_row){
+    if (al->num_rows >= al->max_size)
         expand(al);
 
-    al->arr[ al->size ] = new_val;
-    al->size ++;
+    al->rows[ al->num_rows ] = new_row;
+    // free(new_row);
+    al->num_rows ++;
 }
 
-void add(struct array_list *al, int index, int new_val){
-    if (al->size >= al->max_size)
+void add(struct array_list *al, int index, struct row new_row){
+    if (index < 0 || index >= al->num_rows){
+        printf("Index Out of Bound\n");
+        return;
+    }
+
+    if (al->num_rows >= al->max_size)
         expand(al);
 
-    for (int i = al->size; i > index; i --)
-        al->arr[i] = al->arr[i - 1];
+    for (int i = al->num_rows; i > index; i --)
+        al->rows[i] = al->rows[i - 1];
 
-    al->arr[index] = new_val;
-    al->size ++;
+    al->rows[index] = new_row;
+    // free(new_row);
+    al->num_rows ++;
 }
 
-int delete(struct array_list *al, int index){
-    int temp = al->arr[index];
-    for(int i = index; i < al->size - 1; i ++)
-        al->arr[i] = al->arr[i + 1];
-    al->size --;
+struct row remov(struct array_list *al, int index){
+    struct row temp = al->rows[index];
+    for(int i = index; i < al->num_rows - 1; i ++)
+        al->rows[i] = al->rows[i + 1];
+    al->num_rows --;
     return temp;
 }

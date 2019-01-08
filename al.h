@@ -1,24 +1,42 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+
+#ifndef AL_H
+#define AL_H
+
+#define INT 0
+#define DOUBLE 1
+#define STRING 2
+
+union value {
+    int integer;
+    double decimal;
+    char *string;
+};
+
+struct row {
+    union value *values;
+};
 
 struct array_list {
-    int *arr;
-    int size;
+    struct row *rows;
+    int num_rows;
     int max_size;
 };
 
 void construct(struct array_list *al);
 
-void print_arr(struct array_list *al);
-
 void expand(struct array_list *al);
 
-int get(struct array_list *al, int index);
+struct row get(struct array_list *al, int index);
 
-int set(struct array_list *al, int index, int new_val);
+struct row set(struct array_list *al, int index, struct row new_row);
 
-void add_last(struct array_list *al, int new_val);
+void add_last(struct array_list *al, struct row new_row);
 
-void add(struct array_list *al, int index, int new_val);
+void add(struct array_list *al, int index, struct row new_row);
 
-int delete(struct array_list *al, int index);
+struct row remov(struct array_list *al, int index);
+
+#endif
