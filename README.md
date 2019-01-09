@@ -9,8 +9,8 @@ Simple CRUD Database System in C
 
 ```
 create <tablename> {
-    <type> <colname> [<tags>],
-    [<type> <colname> [<tags>],]
+    <type> <colname> [<tags>][,
+    <type> <colname> [<tags>]]
     ...
 };
 ```
@@ -21,15 +21,15 @@ tags: `-primarykey`, `-autoinc`, `-foreignkey(<tablename>.<colname>)`, `default(
 - Read
 
 ```
-read <tablename> [{
-    <jointype> join <tablename> [on <expr>],
-    [<jointype> join <tablename> [on <expr>],]
+read [all]OR[{
+     [$<operation>](<tablename>.<colname>) [as <name>][,
+     [$<operation>](<tablename>.<colname>) [as <name>]]
+     ...
+}] from <tablename> [{
+    <jointype> join <tablename> [on <expr>][,
+    <jointype> join <tablename> [on <expr>]]
     ...
-}] [all]OR[{
-    [$<operation>](<tablename>.<colname>) [as <name>],
-    [[$<operation>](<tablename>.<colname>) [as <name>],]
-    ...
-}]
+}] 
 [where <expr>]
 [group by <name>]
 [order by <name> [<order>]]
@@ -45,11 +45,11 @@ orders: `asc`, `dsc`
 - Insert
 
 ```
-insert <tablename> {
-    (<colname>:<value>, [<colname>:<value>,] ...),
-    [(<colname>:<value>, [<colname>:<value>,] ...),]
+insert {
+    (<colname>:<value>, [<colname>:<value>,] ...)[,
+    (<colname>:<value>, [<colname>:<value>,] ...)]
     ...
-};
+} into <tablename>;
 ```
 
 - Update
