@@ -19,6 +19,9 @@
 #define MAX 1
 #define MIN 2
 
+#define OR 0;
+#define AND 1;
+
 struct table {
     char name[DATA_SIZE];
     int *types;

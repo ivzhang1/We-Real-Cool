@@ -59,12 +59,20 @@ struct table *get_table(char *tname, struct database *db){
 }
 
 void create_table(char *str, struct database *db){
+
+    char *tname = rs( strsep(&str, "{") );
+    if (get_table(tname, db)){
+      printf("table: %s exists\n", tname);
+      return;
+    }
+
     struct table *t = db->tables + db->num_tables;
     db->num_tables ++;
-
+    
     construct(&(t->al));
     str = rs(str);
-    strcpy(t->name, rs( strsep(&str, "{") ));
+    
+    strcpy(t->name, tname);
     // printf("[%s]\n", t->name);
     char *data = strsep(&str, "}");
     int i;
@@ -108,26 +116,13 @@ int index_of(struct table *t, char *col){
     return -1;
 }
 
-void read_spec(struct table *t, char *expr){
-    char **each;
-    int *types, ctr = 0;
-    while (*expr)
-        if ( !strncmp(expr, "&", 1)){
-            each[ctr] = strsep(&expr, "&");
-            types[ctr] = 1;
-            ctr ++;
-        }
-        else if ( !strncmp(expr, "|", 1)){
-            each[ctr] = strsep(&expr, "|");
-            types[ctr] = 0;
-            ctr ++;
-        }
-        else
-            expr ++;
-    char *col = rs(strsep(&expr, "="));
-    expr = rs(expr);
-    // union value val;
-    int index = index_of(t, col);
+int read_bool_and(struct table *t, char **cols, char **vals, int *types, int ctr){
+
+  // union value val;
+  int index, print = 0;
+  char **
+  for (int i = 0; i < ctr; i ++){
+    index = index_of(t, col[i]);
     if (index == -1){
         printf("column does not exist\n");
         return;
@@ -150,6 +145,26 @@ void read_spec(struct table *t, char *expr){
         for (int j = 0; j < t->al.num_rows; j ++)
             if ( !strcmp(expr, get(&(t->al), j).values[index].string) )
                 print_row(t, j);
+  }
+}
+
+void read_spec_h(struct table *t, char **piece, int ctr){
+
+  
+
+}
+
+void read_spec(struct table *t, char *expr){
+    char **piece;
+    int ctr = 0;
+    while (*expr)
+        if ( !strncmp(expr, "|", 1)){
+	    piece[ctr] = rs(strsep(&expr, "|"));
+            ctr ++;
+        }
+        else
+            expr ++;
+    read_spec_h(t, piece, ctr);
 }
 
 void read_table(char *str, struct database *db){
