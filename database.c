@@ -56,12 +56,17 @@ int get_client(int listening_sd) {
 }
 
 void fulfill(int client_sd, int sem_id) {
-    char query_buf[BUFFER_SIZE];
+    char *query_buf = calloc(BUFFER_SIZE, sizeof(char));
     error_check("receiving", (int) recv(client_sd, query_buf, sizeof(query_buf), 0));
     printf("[subserver %d] received query, processing\n", getpid());
-    process(query_buf, sem_id);
+    char *response_buf = calloc(BUFFER_SIZE, sizeof(char));
+    process(query_buf, sem_id, response_buf);
+    free(query_buf);
+    error_check("responding", (int) send(client_sd, response_buf, BUFFER_SIZE, 0));
+    free(response_buf);
+
 }
 
-void process(char *query, int sem_id) {
+void process(char *query, int sem_id, char *response_buf) {
 
 }
