@@ -13,7 +13,7 @@ void print_row(struct table *t, int index){
 }
 
 void print_table(struct table *t){
-    printf("Table: [%s]\n", t->name);
+    // printf("Table: [%s]\n", t->name);
     printf("| ");
     for (int i = 0; i < t->num_columns; i ++)
         printf("[%s] | ", t->names[i]);
@@ -53,8 +53,8 @@ int hs(char *str){
 
 struct table *get_table(char *tname, struct database *db){
   for (int i = 0; i < db->num_tables; i ++)
-    if ( !strcmp(db->tables[i].name, tname) )
-           return db->tables + i;
+      if ( !strcmp(db->tables[i].name, tname) )
+          return db->tables + i;
   return 0;
 }
 
@@ -68,10 +68,10 @@ void create_table(char *str, struct database *db){
 
     struct table *t = db->tables + db->num_tables;
     db->num_tables ++;
-    
+
     construct(&(t->al));
     str = rs(str);
-    
+
     strcpy(t->name, tname);
     // printf("[%s]\n", t->name);
     char *data = strsep(&str, "}");
@@ -116,55 +116,82 @@ int index_of(struct table *t, char *col){
     return -1;
 }
 
-int read_bool_and(struct table *t, char **cols, char **vals, int *types, int ctr){
-
-  // union value val;
-  int index, print = 0;
-  char **
-  for (int i = 0; i < ctr; i ++){
-    index = index_of(t, col[i]);
-    if (index == -1){
-        printf("column does not exist\n");
-        return;
+int *bool_and(struct table *t, char **piece, int c){
+    char *col, *val;
+    int *read = calloc(t->al.num_rows, sizeof(int));
+    for (int i = 0; i < c; i ++){
+        col = rs( strsep(piece + i, "=") );
+        val = rs( piece[i] );
+        int index = index_of(t, col);
+        if (index == -1){
+            printf("column does not exist\n");
+            return 0;
+        }
+        for (int r = 0; r < t->al.num_rows; r ++)
+            if (t->types[index] == INT)
+                read[r] += get(&(t->al), r).values[index].integer != atoi(val);
+            else if (t->types[index] == DOUBLE)
+                read[r] += get(&(t->al), r).values[index].decimal != atof(val);
+            else if (t->types[index] == STRING)
+                read[r] += strcmp(get(&(t->al), r).values[index].string, val);
+            else
+                return 0;
     }
-    if (t->types[index] == INT) {
-        int val = atoi(expr);
-        for (int j = 0; j < t->al.num_rows; j ++)
-            if (val == get(&(t->al), j).values[index].integer)
-                print_row(t, j);
-    }
-        // val.integer = atoi(expr);
-    else if (t->types[index] == DOUBLE) {
-        double val = atof(expr);
-        for (int j = 0; j < t->al.num_rows; j ++)
-            if (val == get(&(t->al), j).values[index].decimal)
-                print_row(t, j);
-    }
-        // val.decimal = atof(expr);
-    else if (t->types[index] == STRING)
-        for (int j = 0; j < t->al.num_rows; j ++)
-            if ( !strcmp(expr, get(&(t->al), j).values[index].string) )
-                print_row(t, j);
-  }
+    for (int r = 0; r < t->al.num_rows; r ++)
+        read[r] = !read[r];
+    return read;
 }
 
-void read_spec_h(struct table *t, char **piece, int ctr){
-
-  
-
+int *bool_or(struct table *t, char **piece, int c){
+    int *read = calloc(t->al.num_rows, sizeof(int));
+    int *subread;
+    int ctr;
+    char **subpiece;
+    for (int j = 0; j < c; j ++){
+        ctr = 0;
+        subpiece = calloc(strlen(piece[j]), sizeof(char *));
+        while (subpiece[ctr] = strsep(piece + j, "&")){
+            subpiece[ctr] = rs(subpiece[ctr]);
+            // printf("[%s]\n", subpiece[ctr]);
+            ctr ++;
+        }
+        subread = bool_and(t, subpiece, ctr);
+        free(subpiece);
+        for (int r = 0; r < t->al.num_rows; r ++)
+            read[r] += subread[r];
+        free(subread);
+    }
+    return read;
+    // for (int i = 0; i < t->al.num_rows; i ++)
+    //     if (read[i])
+    //         print_row(t, i);
+    // free(read);
 }
 
 void read_spec(struct table *t, char *expr){
-    char **piece;
+    expr = rs(expr);
+    char **piece = calloc(strlen(expr), sizeof(char *));
+    // piece[0] = expr;
+
     int ctr = 0;
-    while (*expr)
-        if ( !strncmp(expr, "|", 1)){
-	    piece[ctr] = rs(strsep(&expr, "|"));
-            ctr ++;
-        }
-        else
-            expr ++;
-    read_spec_h(t, piece, ctr);
+    // printf("[%s]\n", expr);
+    while (piece[ctr] = strsep(&expr, "|")){
+        piece[ctr] = rs(piece[ctr]);
+        ctr ++;
+    }
+    // printf("%d\n", ctr);
+    int *read = bool_or(t, piece, ctr);
+    free(piece);
+
+    printf("| ");
+    for (int i = 0; i < t->num_columns; i ++)
+        printf("[%s] | ", t->names[i]);
+    printf("\n");
+
+    for (int i = 0; i < t->al.num_rows; i ++)
+        if (read[i])
+            print_row(t, i);
+    free(read);
 }
 
 void read_table(char *str, struct database *db){
@@ -196,7 +223,7 @@ void read_table(char *str, struct database *db){
                 read_spec(t, piece + 6);
             }
         }
-        strsep(&str, " ");
+        // strsep(&str, " ");
 
     }
 
@@ -254,7 +281,33 @@ void delete(char *str, struct database *db){
         printf("table does not exist\n");
         return;
     }
+    str = rs(str);
+    if ( strncmp(str, "where ", 6) ){
+        printf("invalid syntax\n");
+        return;
+    }
+    str += 6;
+    str = rs(str);
+    char **piece = calloc(strlen(str), sizeof(char *));
+    // piece[0] = expr;
 
+    int ctr = 0;
+    // printf("[%s]\n", expr);
+    while (piece[ctr] = strsep(&str, "|")){
+        piece[ctr] = rs(piece[ctr]);
+        ctr ++;
+    }
+    // printf("%d\n", ctr);
+    int *read = bool_or(t, piece, ctr);
+    free(piece);
+    int num_removed = 0;
+    for (int i = 0; i < t->al.num_rows; i ++)
+        if (read[i + num_removed]){
+            remov(&(t->al), i);
+            num_removed ++;
+            i --;
+        }
+    free(read);
 }
 
 void drop(char *str, struct database *db){
@@ -318,7 +371,7 @@ void execute(char *str, struct database *db){
     else if (!strncmp(str, "sort ", 5))
         sort(str + 5, db);
     else
-        printf("Invalid Command\n");
+        printf("invalid command\n");
 }
 
 int main(){
@@ -330,7 +383,7 @@ int main(){
     execute(str, db);
     // print_table(&(db->tables[0]));
 
-    char ins[] = "  insert    oof  {  (1024 ,  2.718 ,  xD ) (   5, 91.7  , smd ) (  3 , 6.9 , lmao ) (   5, 3.14  , UwU )  }";
+    char ins[] = "  insert    oof  { (   5, 91.7  , smd )(1024 ,  2.718 ,  xD )  (5, 6, oof)(  3 , 6.9 , lmao ) (   5, 3.14  , UwU )  }";
     execute(ins, db);
     // print_table(&(db->tables[0]));
 
@@ -338,7 +391,7 @@ int main(){
     // execute(dr, db);
     // execute(ins, db);
 
-    char rd[] = " read   oof   all where  d  =  91.7 ";
+    char rd[] = " read   oof   all where  i  = 5";
     execute(rd, db);
 
     char st[] = "  sort  oof by  d ";
@@ -346,6 +399,9 @@ int main(){
     // execute(rd, db);
     print_table(&(db->tables[0]));
 
+    char rm[] = " delete   oof    where  i = 5 &  d = 3.14  | s = xD";
+    execute(rm, db);
+    print_table(&(db->tables[0]));
 
     return 0;
 }
