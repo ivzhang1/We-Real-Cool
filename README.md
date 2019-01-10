@@ -18,6 +18,16 @@ types: `int`, `double`, `string(<len>)`
 
 tags: `-primarykey`, `-autoinc`, `-foreignkey(<tablename>.<colname>)`, `default(<value>)`
 
+- Insert
+
+```
+insert {
+    (<colname>:<value>, [<colname>:<value>,] ...)[,
+    (<colname>:<value>, [<colname>:<value>,] ...)]
+     ...
+} into <tablename>;
+```
+
 - Read
 
 ```
@@ -41,16 +51,6 @@ operations: `avg`, `max`, `min`
 expressions: `<name/val> == <name/val>`
 
 orders: `asc`, `dsc`
-
-- Insert
-
-```
-insert {
-    (<colname>:<value>, [<colname>:<value>,] ...)[,
-    (<colname>:<value>, [<colname>:<value>,] ...)]
-    ...
-} into <tablename>;
-```
 
 - Update
 

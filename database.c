@@ -5,6 +5,7 @@
 #include <sys/socket.h>
 #include <stdlib.h>
 #include <netdb.h>
+#include <string.h>
 #include "database.h"
 #include "commons.h"
 
@@ -63,5 +64,22 @@ void fulfill(int client_sd, int sem_id) {
 }
 
 void process(char *query, int sem_id) {
+    char *command;
+    while ((command = strsep(&query, ";"))) {
+        if (!strncmp(query, "create", 6)) {
 
+        } else if (!strncmp(query, "insert", 6)) {
+
+        } else if (!strncmp(query, "read", 4)) {
+
+        } else if (!strncmp(query, "update", 6)) {
+
+        } else if (!strncmp(query, "delete", 6)) {
+
+        } else if (!strncmp(query, "drop", 4)) {
+
+        } else {
+
+        }
+    }
 }
