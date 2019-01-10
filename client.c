@@ -14,7 +14,9 @@ int main(int argc, char * argv[]) {
     char *port = argv[2];
     int db_sd = connect_to_db(ip, port);
     while (1) {
-        query(db_sd); // do stuff!
+        char *response_buf = query(db_sd);
+        printf("%s\n", response_buf);
+        free(response_buf);
         close(db_sd);
         return 0;
     }
@@ -42,9 +44,13 @@ int connect_to_db(char *ip, char *port) {
     return db_sd;
 }
 
-void query(int db_sd) {
+char *query(int db_sd) {
     char *query_buf = get_query();
     error_check("sending", (int) send(db_sd, query_buf, BUFFER_SIZE, 0));
+    free(query_buf);
+    char *response_buf = calloc(BUFFER_SIZE, sizeof(char));
+    recv(db_sd, response_buf, BUFFER_SIZE, 0);
+    return response_buf;
 }
 
 char *get_query() {
