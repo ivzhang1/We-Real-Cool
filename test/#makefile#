@@ -1,0 +1,4 @@
+all: run
+	gcc tests.o general_methods.o
+
+tests.o
