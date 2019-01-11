@@ -29,17 +29,29 @@ void print_table(struct table *t){
 
 //removes begining and ending spaces
 char *rs(char *str){
-    while (!strncmp(str, " ", 1))
+    while (*str && !strncmp(str, " ", 1))
         str ++;
-    char *dummy = str;
-    while (*dummy)
-        dummy ++;
-    dummy --;
-    while (!strncmp(dummy, " ", 1)){
-        *dummy = 0;
+    char *dummy = str + strlen(str) - 1;
+    while (!strncmp(dummy, " ", 1))
         dummy --;
-    }
+    *(dummy + 1) = 0;
     return str;
+}
+
+//removes quotation marks
+char *rq(char *str){
+    if (strncmp(str, "\"", 1))
+        return 0;
+    str ++;
+    char *dummy = str;
+    while (*dummy){
+        if (!strncmp(dummy, "\"", 1)){
+            *dummy = 0;
+            return str;
+        }
+        dummy ++;
+    }
+    return 0;
 }
 
 int hs(char *str){
@@ -117,25 +129,44 @@ int index_of(struct table *t, char *col){
 }
 
 int *bool_and(struct table *t, char **piece, int c){
-    char *col, *val;
+    char *col, *val, *str;
+    int val_int;
+    double val_double;
+    char *val_str;
+    int col_exists;
     int *read = calloc(t->al.num_rows, sizeof(int));
     for (int i = 0; i < c; i ++){
         col = rs( strsep(piece + i, "=") );
         val = rs( piece[i] );
+        str = rq(val);
         int index = index_of(t, col);
         if (index == -1){
-            printf("column does not exist\n");
-            return 0;
+            val_int = atoi(col);
+            val_double = atof(col);
+            val_str = rq(col);
+            col_exists = 0;
         }
+        else
+            col_exists = 1;
         for (int r = 0; r < t->al.num_rows; r ++)
-            if (t->types[index] == INT)
-                read[r] += get(&(t->al), r).values[index].integer != atoi(val);
-            else if (t->types[index] == DOUBLE)
-                read[r] += get(&(t->al), r).values[index].decimal != atof(val);
-            else if (t->types[index] == STRING)
-                read[r] += strcmp(get(&(t->al), r).values[index].string, val);
+            if (col_exists)
+                if (t->types[index] == INT)
+                    read[r] += get(&(t->al), r).values[index].integer != atoi(val) ;
+                else if (t->types[index] == DOUBLE)
+                    read[r] += get(&(t->al), r).values[index].decimal != atof(val);
+                else if (t->types[index] == STRING){
+                    if (!str){
+                        printf("syntax error: need quotation marks for text field\n");
+                        return 0;
+                    }
+                    read[r] += strcmp(get(&(t->al), r).values[index].string, str);
+                }
+                else
+                    return 0;
             else
-                return 0;
+                read[r] += !(val_int && val_int == atoi(val) ||
+                             val_double && val_double == atof(val) ||
+                             val_str && !strcmp(val_str, str) );
     }
     for (int r = 0; r < t->al.num_rows; r ++)
         read[r] = !read[r];
@@ -156,6 +187,7 @@ int *bool_or(struct table *t, char **piece, int c){
             ctr ++;
         }
         subread = bool_and(t, subpiece, ctr);
+        if (!subread) return 0;
         free(subpiece);
         for (int r = 0; r < t->al.num_rows; r ++)
             read[r] += subread[r];
@@ -181,6 +213,7 @@ void read_spec(struct table *t, char *expr){
     }
     // printf("%d\n", ctr);
     int *read = bool_or(t, piece, ctr);
+    if (!read) return;
     free(piece);
 
     printf("| ");
@@ -264,8 +297,14 @@ void insert(char *str, struct database *db){
                 r->values[i].integer = atoi(piece);
             else if (t->types[i] == DOUBLE)
                 r->values[i].decimal = atof(piece);
-            else if (t->types[i] == STRING)
+            else if (t->types[i] == STRING){
+                piece = rq(piece);
+                if (!piece){
+                    printf("syntax error: need quotation marks for text field\n");
+                    return;
+                }
                 r->values[i].string = piece;
+            }
         }
         add_last(&(t->al), *r);
         free(r);
@@ -275,13 +314,17 @@ void insert(char *str, struct database *db){
 
 void delete(char *str, struct database *db){
     str = rs(str);
-    char *tname = rs( strsep(&str, " ") );
+    char *tname = strsep(&str, " ");
     struct table *t = get_table(tname, db);
     if (!t){
         printf("table does not exist\n");
         return;
     }
-    str = rs(str);
+    if (!str){
+        while(t->al.num_rows)
+            remov(&(t->al), t->al.num_rows - 1);
+        return;
+    }
     if ( strncmp(str, "where ", 6) ){
         printf("invalid syntax\n");
         return;
@@ -383,25 +426,25 @@ int main(){
     execute(str, db);
     // print_table(&(db->tables[0]));
 
-    char ins[] = "  insert    oof  { (   5, 91.7  , smd )(1024 ,  2.718 ,  xD )  (5, 6, oof)(  3 , 6.9 , lmao ) (   5, 3.14  , UwU )  }";
+    char ins[] = "  insert    oof  { (   5, 91.7  , \"smd\" )(1024 ,  2.718 ,  \"xD\" )  (5, 6, \"oof\")(  3 , 6.9 , \"lmao\" ) (   5, 3.14  , \"UwU\" )  }";
     execute(ins, db);
-    // print_table(&(db->tables[0]));
+    print_table(&(db->tables[0]));
 
     // char dr[] = " drop   oof   ";
     // execute(dr, db);
     // execute(ins, db);
 
-    char rd[] = " read   oof   all where  i  = 5";
+    char rd[] = " read   oof   all where  3  = 3";
     execute(rd, db);
 
     char st[] = "  sort  oof by  d ";
     execute(st, db);
     // execute(rd, db);
-    print_table(&(db->tables[0]));
+    // print_table(&(db->tables[0]));
 
-    char rm[] = " delete   oof    where  i = 5 &  d = 3.14  | s = xD";
-    execute(rm, db);
-    print_table(&(db->tables[0]));
+    // char rm[] = " delete   oof   ";
+    // execute(rm, db);
+    // print_table(&(db->tables[0]));
 
     return 0;
 }

@@ -2,36 +2,37 @@
 #include <stdlib.h>
 #include <string.h>
 
-char *strsep_str(char **str, char *delim){
-  char *temp = *str;
-  int len = strlen(delim);
-  char *found = 0;
-  int ctr = 0;
-  while (**str){
-    if ( !strncmp(*str, delim, len) ){
-      found = *str;
-      *str += len;
-      break;
+char *rs(char *str){
+    while (*str && !strncmp(str, " ", 1))
+        str ++;
+    char *dummy = str + strlen(str) - 1;
+    while (!strncmp(dummy, " ", 1))
+        dummy --;
+    *(dummy + 1) = 0;
+    return str;
+}
+
+char *rq(char *str){
+    if (strncmp(str, "\"", 1))
+        return 0;
+    str ++;
+    char *dummy = str;
+    while (*dummy){
+        if (!strncmp(dummy, "\"", 1)){
+            *dummy = 0;
+            return str;
+        }
+        dummy ++;
     }
-    (*str) ++;
-    ctr ++;
-  }
-  if (found)
-    for (int i = 0; i < len; i ++){
-      *found = 0;
-      found ++;
-    }
-  return temp;
+    return 0;
 }
 
 int main(){
 
-  char *str = malloc(100);
-  strcpy(str, "delete oof wher safafa f");
+  char str[] = "\" smd\"    ";
 
-  char *s = strsep_str(&str, "where");
+  char *s = rq(str);
   printf("[%s]\n", s);
-  printf("[%s]\n", str);
 
   return 0;
 }
