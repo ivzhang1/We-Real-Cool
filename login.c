@@ -7,49 +7,79 @@ void login(){
   char pass[256];
   
   printf("Student Name: ");
-  scanf("%s", student_name);
-  fflush(stdout);
+  fgets(student_name, 256, stdin);
   
   printf("Password: ");
-  scanf("%s", pass);
-  fflush(stdout);
+  fgets(pass, 256, stdin);
   
 }
 
-int main(){
+void registerr(){
   char student_name[256];
   char pass[256];
   char confirm_pass[256];
   
   printf("Student Name: ");
   fgets(student_name, 256, stdin);
-  //fflush(stdout);
 
   printf("Password: ");
   fgets(pass, 256, stdin);
-  //fflush(stdout);
   
   printf("Confirm Password: ");
   fgets(confirm_pass, 256, stdin);
-  //fflush(stdout);
+  *(pass + strlen(pass) - 1) = '\0';
+  *(confirm_pass + strlen(confirm_pass) - 1) = '\0';
 
-  while(strcmp(pass, confirm_pass) != 0){
-    printf("Passwords don't match! Try again!\n");
+  while(strlen(student_name) <= 4){
+    printf("Username must be longer than 4 characters\n");
+    printf("Student Name: ");
+    fgets(student_name, 256, stdin);  
+  }
+
+  
+  while(strcmp(pass, confirm_pass) != 0 || strlen(pass) <= 4){
+    printf("Passwords don't match! Password needs to be more than 4 characters long! Try again!\n");
 
     printf("Password: ");
     fgets(pass, 256, stdin);
-    //fflush(stdout);
     
     printf("Confirm Password: ");
     fgets(confirm_pass, 256, stdin);
-    //fflush(stdout);
   }
-  printf("%ld\n", strlen(student_name));
   *(student_name + strlen(student_name) - 1) = '\0';
   *(pass + strlen(pass) - 1) = '\0';
   *(confirm_pass + strlen(confirm_pass) - 1) = '\0';
 
   printf("Success: %s, %s, %s\n", student_name, pass, confirm_pass);
-  return 0;
   
+}
+
+void log_or_reg(){
+  char input[2];
+  
+  printf("Do you have an account (y/n): ");
+  fgets(input, 2, stdin);
+
+  
+  while(strncmp(input, "y", 1) && strncmp(input, "n", 1)){
+    printf("Try again! Enter 'y' or 'n': ");
+    fgets(input, 2, stdin);
+    
+  }
+
+  if (!strncmp(input, "y", 1)){
+    fflush(stdin);
+    login();
+  }
+  else{
+    fflush(stdin);
+    registerr();
+  }
+
+  
+}
+
+int main(){
+  log_or_reg();
+  return 0;
 }
