@@ -66,7 +66,7 @@ void fulfill(int client_sd, int sem_id) {
 
 }
 
-char * process(char *query, int sem_id) {
+char *process(char *query, int sem_id) {
     char *response = calloc(BUFFER_SIZE, sizeof(char));
     char *command;
     while ((command = strsep(&query, ";"))) {
