@@ -4,11 +4,11 @@ void print_row(struct table *t, int index){
     printf("| ");
     for (int i = 0; i < t->num_columns; i ++)
         if (t->types[i] == INT)
-            printf("[%d] | ", get(&(t->al), index).values[i].integer);
+            printf("[%d] | ", get(t->al, index).values[i].integer);
         else if (t->types[i] == DOUBLE)
-            printf("[%lf] | ", get(&(t->al), index).values[i].decimal);
+            printf("[%lf] | ", get(t->al, index).values[i].decimal);
         else if (t->types[i] == STRING)
-            printf("[%s] | ", get(&(t->al), index).values[i].string);
+            printf("[%s] | ", get(t->al, index).values[i].string);
     printf("\n");
 }
 
@@ -16,10 +16,10 @@ void print_table(struct table *t){
     // printf("Table: [%s]\n", t->name);
     printf("| ");
     for (int i = 0; i < t->num_columns; i ++)
-        printf("[%s] | ", t->names[i]);
+        printf("[%s] | ", t->col_names[i]);
     printf("\n");
 
-    for (int i = 0; i < t->al.num_rows; i ++){
+    for (int i = 0; i < t->al->num_rows; i ++){
         print_row(t, i);
         // printf("\n");
     }
@@ -29,6 +29,7 @@ void print_table(struct table *t){
 
 //removes begining and ending spaces
 char *rs(char *str){
+    if (!str) return 0;
     while (*str && !strncmp(str, " ", 1))
         str ++;
     char *dummy = str + strlen(str) - 1;
@@ -70,6 +71,46 @@ struct table *get_table(char *tname, struct database *db){
   return 0;
 }
 
+void initialize(struct table *t, int i){
+    t->num_columns = i;
+    t->types = calloc(i, sizeof(int));
+    t->tags = calloc(i * 3, sizeof(int));
+    t->col_names = calloc(i, sizeof(char *));
+    t->defaults = calloc(i, sizeof(union value));
+    t->al = malloc(sizeof(struct array_list));
+    construct(t->al);
+}
+
+void set_tag(struct table *t, int j, char *tag){
+    // printf("[%s]\n", tag);
+    if (!strcmp(tag, "-primarykey")){
+        // if (t->tags[pos(j, DEFAULT)]){
+        //     printf("-primarykey cannot coexist with -default\n");
+        //     return;
+        // }
+        for (int i = 0; i < j; i ++)
+            if (t->tags[i] == PRIMARY_KEY){
+                printf("each table has at most 1 -primarykey column\n");
+                return;
+            }
+        t->tags[j] = PRIMARY_KEY;
+    }
+    else if (!strcmp(tag, "-autoinc")){
+        t->tags[j] = AUTO_INC;
+    }
+    else if (!strncmp(tag, "-defaults", 8)){
+        t->tags[j] = DEFAULT;
+        strsep(&tag, "(");
+        char *val = rs( strsep(&tag, ")") );
+        if (t->types[j] == INT)
+            t->defaults[j].integer = atoi(val);
+        else if (t->types[j] == DOUBLE)
+            t->defaults[j].decimal = atof(val);
+        else if (t->types[j] == STRING)
+            t->defaults[j].string = val;
+    }
+}
+
 void create_table(char *str, struct database *db){
 
     char *tname = rs( strsep(&str, "{") );
@@ -81,7 +122,6 @@ void create_table(char *str, struct database *db){
     struct table *t = db->tables + db->num_tables;
     db->num_tables ++;
 
-    construct(&(t->al));
     str = rs(str);
 
     strcpy(t->name, tname);
@@ -90,16 +130,20 @@ void create_table(char *str, struct database *db){
     int i;
     char **piece = calloc(DATA_SIZE, sizeof(char *));
     char **type = calloc(DATA_SIZE, sizeof(char *));
+    char **name = calloc(DATA_SIZE, sizeof(char *));
 
     for (i = 0; piece[i] = strsep(&data, ","); i ++){
         piece[i] = rs(piece[i]);
-        type[i] = strsep(&piece[i], " ");
+        type[i] = strsep(piece + i, " ");
+        piece[i] = rs(piece[i]);
+        name[i] = strsep(piece + i, " ");
+        // printf("[%s]\n", piece[i]);
         piece[i] = rs(piece[i]);
     }
 
-    t->num_columns = i;
-    t->types = calloc(i, sizeof(int));
-    t->names = calloc(i, sizeof(char *));
+    initialize(t, i);
+
+    char *tag;
 
     for (int j = 0; j < i; j ++){
         if ( !strcmp(type[j], "int") )
@@ -112,7 +156,9 @@ void create_table(char *str, struct database *db){
             printf("invalid type: %s\n", type[j]);
             return;
         }
-        t->names[j] = piece[j];
+        t->col_names[j] = name[j];
+        if (tag = strsep(piece + j, " "))
+            set_tag(t, j, tag);
     }
     // print_table(t);
     // return t;
@@ -123,7 +169,7 @@ void create_table(char *str, struct database *db){
 int index_of(struct table *t, char *col){
     col = rs(col);
     for (int i = 0; i < t->num_columns; i ++)
-        if ( !strcmp(t->names[i], col))
+        if ( !strcmp(t->col_names[i], col))
             return i;
     return -1;
 }
@@ -134,7 +180,7 @@ int *bool_and(struct table *t, char **piece, int c){
     double val_double;
     char *val_str;
     int col_exists;
-    int *read = calloc(t->al.num_rows, sizeof(int));
+    int *read = calloc(t->al->num_rows, sizeof(int));
     for (int i = 0; i < c; i ++){
         col = rs( strsep(piece + i, "=") );
         val = rs( piece[i] );
@@ -148,18 +194,18 @@ int *bool_and(struct table *t, char **piece, int c){
         }
         else
             col_exists = 1;
-        for (int r = 0; r < t->al.num_rows; r ++)
+        for (int r = 0; r < t->al->num_rows; r ++)
             if (col_exists)
                 if (t->types[index] == INT)
-                    read[r] += get(&(t->al), r).values[index].integer != atoi(val) ;
+                    read[r] += get(t->al, r).values[index].integer != atoi(val) ;
                 else if (t->types[index] == DOUBLE)
-                    read[r] += get(&(t->al), r).values[index].decimal != atof(val);
+                    read[r] += get(t->al, r).values[index].decimal != atof(val);
                 else if (t->types[index] == STRING){
                     if (!str){
                         printf("syntax error: need quotation marks for text field\n");
                         return 0;
                     }
-                    read[r] += strcmp(get(&(t->al), r).values[index].string, str);
+                    read[r] += strcmp(get(t->al, r).values[index].string, str);
                 }
                 else
                     return 0;
@@ -168,13 +214,13 @@ int *bool_and(struct table *t, char **piece, int c){
                              val_double && val_double == atof(val) ||
                              val_str && !strcmp(val_str, str) );
     }
-    for (int r = 0; r < t->al.num_rows; r ++)
+    for (int r = 0; r < t->al->num_rows; r ++)
         read[r] = !read[r];
     return read;
 }
 
 int *bool_or(struct table *t, char **piece, int c){
-    int *read = calloc(t->al.num_rows, sizeof(int));
+    int *read = calloc(t->al->num_rows, sizeof(int));
     int *subread;
     int ctr;
     char **subpiece;
@@ -189,12 +235,12 @@ int *bool_or(struct table *t, char **piece, int c){
         subread = bool_and(t, subpiece, ctr);
         if (!subread) return 0;
         free(subpiece);
-        for (int r = 0; r < t->al.num_rows; r ++)
+        for (int r = 0; r < t->al->num_rows; r ++)
             read[r] += subread[r];
         free(subread);
     }
     return read;
-    // for (int i = 0; i < t->al.num_rows; i ++)
+    // for (int i = 0; i < t->al->num_rows; i ++)
     //     if (read[i])
     //         print_row(t, i);
     // free(read);
@@ -218,10 +264,10 @@ void read_spec(struct table *t, char *expr){
 
     printf("| ");
     for (int i = 0; i < t->num_columns; i ++)
-        printf("[%s] | ", t->names[i]);
+        printf("[%s] | ", t->col_names[i]);
     printf("\n");
 
-    for (int i = 0; i < t->al.num_rows; i ++)
+    for (int i = 0; i < t->al->num_rows; i ++)
         if (read[i])
             print_row(t, i);
     free(read);
@@ -274,23 +320,29 @@ void insert(char *str, struct database *db){
         return;
     }
     char *data = strsep(&str, "}");
-    char *row, *piece;
+    char *row, *piece, *col;
+    int i;
+    int *fill = calloc(t->num_columns, sizeof(int));
     struct row *r;
     while (strsep(&data, "(") && data){
         row = strsep(&data, ")");
         // printf("[%s]\n", row);
-        if (!row){
-            printf("missing closing '('\n");
+        if (!data){
+            printf("missing closing ')'\n");
             return;
         }
         r = malloc(sizeof(struct row));
         r->values = calloc(t->num_columns, sizeof(union value));
         // r = malloc(sizeof(struct row));
-        for (int i = 0; i < t->num_columns; i ++){
-            piece = rs( strsep(&row, ",") );
-            // printf("[%s]\n", piece);
-            if (!piece){
-                printf("insufficient number of parameters\n");
+
+        while(piece = strsep(&row, ",") ){
+        // printf("[%s]\n", piece);
+            col = rs(strsep(&piece, ":"));
+            // printf("[%s]\n", col);
+            piece = rs(piece);
+            i = index_of(t, col);
+            if (i == -1){
+                printf("column does not exist\n");
                 return;
             }
             if (t->types[i] == INT)
@@ -305,8 +357,42 @@ void insert(char *str, struct database *db){
                 }
                 r->values[i].string = piece;
             }
+            fill[i] = 1;
         }
-        add_last(&(t->al), *r);
+        for (int j = 0; j < t->num_columns; j ++){
+            // printf("%d\n", fill[j]);
+            if (!fill[j]){
+                // printf("%d\n", j);
+                if (t->tags[j] == PRIMARY_KEY || t->tags[j] == AUTO_INC){
+                    // printf("%d\n", j);
+                    if (t->types[j] == INT){
+                        if (t->al->num_rows == 0)
+                            r->values[j].integer = 0;
+                        else
+                            r->values[j].integer = get(t->al, t->al->num_rows - 1).values[j].integer + 1;
+                    }
+                    else if (t->types[j] == DOUBLE){
+                        if (t->al->num_rows == 0)
+                            r->values[j].decimal = 0;
+                        else
+                            r->values[j].decimal = get(t->al, t->al->num_rows - 1).values[j].decimal + 1;
+                    }
+                }
+                else if (t->tags[j] == DEFAULT){
+                    if (t->types[j] == INT)
+                        r->values[j].integer = t->defaults[j].integer;
+                    else if (t->types[j] == DOUBLE)
+                        r->values[j].decimal = t->defaults[j].decimal;
+                }
+                else {
+                    printf("insert failed: incomplete row\n");
+                    return;
+                }
+            }
+            else
+                fill[j] = 0;
+        }
+        add_last(t->al, *r);
         free(r);
         // printf("[%s]\n", data);
     }
@@ -321,8 +407,8 @@ void delete(char *str, struct database *db){
         return;
     }
     if (!str){
-        while(t->al.num_rows)
-            remov(&(t->al), t->al.num_rows - 1);
+        while(t->al->num_rows)
+            remov(t->al, t->al->num_rows - 1);
         return;
     }
     if ( strncmp(str, "where ", 6) ){
@@ -344,9 +430,9 @@ void delete(char *str, struct database *db){
     int *read = bool_or(t, piece, ctr);
     free(piece);
     int num_removed = 0;
-    for (int i = 0; i < t->al.num_rows; i ++)
+    for (int i = 0; i < t->al->num_rows; i ++)
         if (read[i + num_removed]){
-            remov(&(t->al), i);
+            remov(t->al, i);
             num_removed ++;
             i --;
         }
@@ -386,12 +472,12 @@ void sort(char *str, struct database *db){
         return;
     }
     char *col = rs(str + 3);
-    // printf("%s\n", t->names[3]);
+    // printf("%s\n", t->col_names[3]);
     for (int i = 0; i < t->num_columns; i ++){
-        // printf("[%s]\n", t->names[i]);
-        if (!strcmp(col, t->names[i])){
+        // printf("[%s]\n", t->col_names[i]);
+        if (!strcmp(col, t->col_names[i])){
             // printf("%d", t->types[i]);
-            quick_sort(&(t->al), i, t->types[i]);
+            quick_sort(t->al, i, t->types[i]);
             return;
         }
     }
@@ -407,6 +493,8 @@ void execute(char *str, struct database *db){
         read_table(str + 5, db);
     else if (!strncmp(str, "insert ", 7))
         insert(str + 7, db);
+    else if (!strncmp(str, "update ", 7))
+        update(str + 7, db);
     else if (!strncmp(str, "delete ", 7))
         delete(str + 7, db);
     else if (!strncmp(str, "drop ", 5))
@@ -422,29 +510,27 @@ int main(){
     struct database *db = malloc( sizeof(struct database) );
     db->tables = calloc(10, sizeof(struct table));
     db->num_tables = 0;
-    char str[] = "   create  oof  {  int   i  ,  double    d   ,  string   s  } ";
-    execute(str, db);
+    char a[] = "   create  oof  {  int   i  ,  double    d   ,  string   s  } ";
+    execute(a, db);
+
+    char b[] = "  insert    oof  { (   i:5, d:91.7  , s:\"smd\" )(d:2.718 , i:1024 ,   s:\"xD\" )  (d:5, s:\"oof\", i:6 )(  i:3 ,d: 6.9 ,s : \"lmao\" ) (   i:5, d:3.14  ,s  : \"UwU\" )  }";
+    execute(b, db);
     // print_table(&(db->tables[0]));
 
-    char ins[] = "  insert    oof  { (   5, 91.7  , \"smd\" )(1024 ,  2.718 ,  \"xD\" )  (5, 6, \"oof\")(  3 , 6.9 , \"lmao\" ) (   5, 3.14  , \"UwU\" )  }";
-    execute(ins, db);
-    print_table(&(db->tables[0]));
 
-    // char dr[] = " drop   oof   ";
-    // execute(dr, db);
-    // execute(ins, db);
+    char c[] = " read   oof   all where  3  = 3";
+    execute(c, db);
 
-    char rd[] = " read   oof   all where  3  = 3";
-    execute(rd, db);
+    char d[] = "  sort  oof by  d ";
+    execute(d, db);
 
-    char st[] = "  sort  oof by  d ";
-    execute(st, db);
-    // execute(rd, db);
-    // print_table(&(db->tables[0]));
+    char e[] = "create  foo  { int n  -primarykey, int  ctr -autoinc,  double x  -default(3.14), string txt }";
+    execute(e, db);
 
-    // char rm[] = " delete   oof   ";
-    // execute(rm, db);
-    // print_table(&(db->tables[0]));
+    char f[] = "insert foo { (txt: \"this is fun\") (x: 5.56) }";
+    execute(f, db);
+    // printf("%d\n", db->tables[1].tags[pos(2, 3)]);
+    print_table(&(db->tables[1]));
 
     return 0;
 }

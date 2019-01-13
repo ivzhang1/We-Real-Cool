@@ -19,15 +19,21 @@
 #define MAX 1
 #define MIN 2
 
-#define OR 0;
-#define AND 1;
+#define OR 0
+#define AND 1
+
+#define PRIMARY_KEY 1
+#define AUTO_INC 2
+#define DEFAULT 3
 
 struct table {
     char name[DATA_SIZE];
+    int *tags;
+    union value *defaults;
     int *types;
-    char **names;
+    char **col_names;
     int num_columns;
-    struct array_list al;
+    struct array_list *al;
 };
 
 struct database {

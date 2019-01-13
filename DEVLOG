@@ -43,3 +43,9 @@ williamL -- 2019-1-9 21:10
 Implemented read_table() with a complete where statement
 Implemented delete() with a complete where statement
 ==============================================================
+williamL -- 2019-1-13 15:15
+--------------------------------------------------------------
+Implemented tags when creating a table
+Updated insert() to match the desired syntax
+ - now only enter the required fields
+==============================================================
