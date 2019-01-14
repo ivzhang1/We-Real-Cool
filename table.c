@@ -485,6 +485,10 @@ void sort(char *str, struct database *db){
     printf("column does not exist\n");
 }
 
+void update(char *str, struct database *db){
+
+}
+
 void execute(char *str, struct database *db){
     str = rs(str);
     if (!strncmp(str, "create ", 7))
@@ -527,7 +531,7 @@ int main(){
     char e[] = "create  foo  { int n  -primarykey, int  ctr -autoinc,  double x  -default(3.14), string txt }";
     execute(e, db);
 
-    char f[] = "insert foo { (txt: \"this is fun\") (x: 5.56) }";
+    char f[] = "insert foo { (txt: \"this is fun\") (txt: \"boba\", x:5.56, ctr: 8) (txt:\"asdf\") }";
     execute(f, db);
     // printf("%d\n", db->tables[1].tags[pos(2, 3)]);
     print_table(&(db->tables[1]));
