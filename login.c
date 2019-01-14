@@ -3,14 +3,19 @@
 #include <unistd.h>
 
 void login(){
+  fflush(stdin);
+
   char student_name[256];
   char pass[256];
   
   printf("Student Name: ");
   fgets(student_name, 256, stdin);
-  
+
   printf("Password: ");
   fgets(pass, 256, stdin);
+
+  *(student_name + strlen(student_name) - 1) = '\0';
+  *(pass + strlen(pass) - 1) = '\0';
   
 }
 
@@ -21,7 +26,16 @@ void registerr(){
   
   printf("Student Name: ");
   fgets(student_name, 256, stdin);
+  *(student_name + strlen(student_name) - 1) = '\0';
 
+  while(strlen(student_name) <= 4){
+    printf("Username must be longer than 4 characters\n");
+    printf("Student Name: ");
+    fgets(student_name, 256, stdin);  
+  }
+
+
+  
   printf("Password: ");
   fgets(pass, 256, stdin);
   
@@ -29,12 +43,6 @@ void registerr(){
   fgets(confirm_pass, 256, stdin);
   *(pass + strlen(pass) - 1) = '\0';
   *(confirm_pass + strlen(confirm_pass) - 1) = '\0';
-
-  while(strlen(student_name) <= 4){
-    printf("Username must be longer than 4 characters\n");
-    printf("Student Name: ");
-    fgets(student_name, 256, stdin);  
-  }
 
   
   while(strcmp(pass, confirm_pass) != 0 || strlen(pass) <= 4){
@@ -50,34 +58,38 @@ void registerr(){
   *(pass + strlen(pass) - 1) = '\0';
   *(confirm_pass + strlen(confirm_pass) - 1) = '\0';
 
-  printf("Success: %s, %s, %s\n", student_name, pass, confirm_pass);
+  //printf("Success: %s, %s, %s\n", student_name, pass, confirm_pass);
   
 }
 
 void log_or_reg(){
-  char input[2];
+  char input[256];
   
   printf("Do you have an account (y/n): ");
-  fgets(input, 2, stdin);
+  fgets(input, 256, stdin);
 
   
   while(strncmp(input, "y", 1) && strncmp(input, "n", 1)){
     printf("Try again! Enter 'y' or 'n': ");
-    fgets(input, 2, stdin);
-    
+    fgets(input, 256, stdin);
   }
 
+  
   if (!strncmp(input, "y", 1)){
-    fflush(stdin);
     login();
   }
   else{
-    fflush(stdin);
     registerr();
   }
 
   
 }
+
+void flushing(){
+
+  
+}
+
 
 int main(){
   log_or_reg();
