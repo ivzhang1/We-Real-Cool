@@ -1,6 +1,31 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <termios.h>
+
+
+char* my_getpass (char *line, int n, FILE *stream)
+{
+    struct termios old, new;
+    char* nread = (char *)calloc(256, sizeof(char));
+
+    /* Turn echoing off and fail if we can't. */
+    if (tcgetattr (fileno (stream), &old) != 0)
+        return NULL;
+    new = old;
+    new.c_lflag &= ~ECHO;
+    if (tcsetattr (fileno (stream), TCSAFLUSH, &new) != 0)
+        return NULL;
+
+    /* Read the password. */
+    nread = fgets(line, n, stream);
+
+    /* Restore terminal. */
+    (void) tcsetattr (fileno (stream), TCSAFLUSH, &old);
+    printf("\n");
+    return nread;
+}
 
 void login(){
   fflush(stdin);
@@ -12,7 +37,8 @@ void login(){
   fgets(student_name, 256, stdin);
 
   printf("Password: ");
-  fgets(pass, 256, stdin);
+  my_getpass(pass, 256, stdin);
+  //fgets(pass, 256, stdin);
 
   *(student_name + strlen(student_name) - 1) = '\0';
   *(pass + strlen(pass) - 1) = '\0';
@@ -37,10 +63,11 @@ void registerr(){
 
   
   printf("Password: ");
-  fgets(pass, 256, stdin);
+  my_getpass(pass, 256, stdin);
   
   printf("Confirm Password: ");
-  fgets(confirm_pass, 256, stdin);
+  my_getpass(confirm_pass, 256, stdin);
+
   *(pass + strlen(pass) - 1) = '\0';
   *(confirm_pass + strlen(confirm_pass) - 1) = '\0';
 
@@ -49,16 +76,17 @@ void registerr(){
     printf("Passwords don't match! Password needs to be more than 4 characters long! Try again!\n");
 
     printf("Password: ");
-    fgets(pass, 256, stdin);
+    my_getpass(pass, 256, stdin);
     
     printf("Confirm Password: ");
-    fgets(confirm_pass, 256, stdin);
+    my_getpass(confirm_pass, 256, stdin);
+
   }
   *(student_name + strlen(student_name) - 1) = '\0';
   *(pass + strlen(pass) - 1) = '\0';
   *(confirm_pass + strlen(confirm_pass) - 1) = '\0';
 
-  //printf("Success: %s, %s, %s\n", student_name, pass, confirm_pass);
+  printf("Success: %s, %s, %s\n", student_name, pass, confirm_pass);
   
 }
 
@@ -84,12 +112,6 @@ void log_or_reg(){
 
   
 }
-
-void flushing(){
-
-  
-}
-
 
 int main(){
   log_or_reg();
