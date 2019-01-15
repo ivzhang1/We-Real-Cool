@@ -49,3 +49,7 @@ Implemented tags when creating a table
 Updated insert() to match the desired syntax
  - now only enter the required fields
 ==============================================================
+williamL -- 2019-1-15 13:20
+--------------------------------------------------------------
+Refactored code that prints table
+==============================================================

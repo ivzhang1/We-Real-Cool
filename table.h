@@ -43,7 +43,7 @@ struct database {
 
 void print_row(struct table *t, int index);
 
-void print_table(struct table *t);
+void print_table(struct table *t, int *read);
 
 //removes begining and ending spaces
 char *rs(char *str);

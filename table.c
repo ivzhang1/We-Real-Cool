@@ -12,7 +12,7 @@ void print_row(struct table *t, int index){
     printf("\n");
 }
 
-void print_table(struct table *t){
+void print_table(struct table *t, int *read){
     // printf("Table: [%s]\n", t->name);
     printf("| ");
     for (int i = 0; i < t->num_columns; i ++)
@@ -20,7 +20,8 @@ void print_table(struct table *t){
     printf("\n");
 
     for (int i = 0; i < t->al->num_rows; i ++){
-        print_row(t, i);
+        if (read[i])
+            print_row(t, i);
         // printf("\n");
     }
 }
@@ -262,14 +263,7 @@ void read_spec(struct table *t, char *expr){
     if (!read) return;
     free(piece);
 
-    printf("| ");
-    for (int i = 0; i < t->num_columns; i ++)
-        printf("[%s] | ", t->col_names[i]);
-    printf("\n");
-
-    for (int i = 0; i < t->al->num_rows; i ++)
-        if (read[i])
-            print_row(t, i);
+    print_table(t, read);
     free(read);
 }
 
@@ -290,7 +284,10 @@ void read_table(char *str, struct database *db){
     // printf("[%s]\n", str);
     if ( !strncmp(str, "all", 3) ){
         if ( !*(str + 4) ){
-            print_table(t);
+            int read[t->al->num_rows];
+            for (int i = 0; i < t->al->num_rows; i ++)
+                read[i] = 1;
+            print_table(t, read);
             return;
         }
         strsep(&str, " ");
@@ -392,7 +389,7 @@ void insert(char *str, struct database *db){
             else
                 fill[j] = 0;
         }
-        add_last(t->al, *r);
+        add(t->al, *r);
         free(r);
         // printf("[%s]\n", data);
     }
@@ -521,7 +518,7 @@ int main(){
     execute(b, db);
 
 
-    char c[] = " read   oof   all where  3  = 3";
+    char c[] = " read   oof   all where s = \"UwU\" | ";
     execute(c, db);
 
     char d[] = "  sort  oof by  d ";
@@ -533,7 +530,7 @@ int main(){
     char f[] = "insert foo { (txt: \"this is fun\") (txt: \"boba\", x:5.56, ctr: 8) (txt:\"asdf\") }";
     execute(f, db);
     // printf("%d\n", db->tables[1].tags[pos(2, 3)]);
-    print_table(&(db->tables[1]));
+    // print_table(&(db->tables[1]));
 
     return 0;
 }

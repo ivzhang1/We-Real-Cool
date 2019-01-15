@@ -27,28 +27,11 @@ struct row set(struct array_list *al, int index, struct row new_row){
     return temp;
 }
 
-void add_last(struct array_list *al, struct row new_row){
+void add(struct array_list *al, struct row new_row){
     if (al->num_rows >= al->max_size)
         expand(al);
 
     al->rows[ al->num_rows ] = new_row;
-    // free(new_row);
-    al->num_rows ++;
-}
-
-void add(struct array_list *al, int index, struct row new_row){
-    if (index < 0 || index >= al->num_rows){
-        printf("Index Out of Bound\n");
-        return;
-    }
-
-    if (al->num_rows >= al->max_size)
-        expand(al);
-
-    for (int i = al->num_rows; i > index; i --)
-        al->rows[i] = al->rows[i - 1];
-
-    al->rows[index] = new_row;
     // free(new_row);
     al->num_rows ++;
 }
