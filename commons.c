@@ -39,6 +39,16 @@ void get_results(char *ip, char *port, struct addrinfo **results_list) {
     }
 }
 
+char *next_word(char **string) {
+    for (; **string != ' '; (*string)++);
+    return strsep(string, " ");
+}
+
+unsigned char is_alpha(char *str) {
+    for (; *str && ((('a' <= *str) && (*str <= 'z')) || (('A' <= *str) && (*str <= 'Z'))); str++);
+    return (unsigned char) (*str == 0);
+}
+
 char *multichar_strsep(char **string, char *delim) {
     size_t len = strlen(delim);
     char *p = *string;

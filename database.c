@@ -1,4 +1,3 @@
-
 #include <stdio.h>
 #include <unistd.h>
 #include <sys/sem.h>
@@ -6,19 +5,24 @@
 #include <stdlib.h>
 #include <netdb.h>
 #include <string.h>
+#include "table.h"
 #include "database.h"
-#include "commons.h"
+
 
 int main(int argc, char * argv[]) {
     check_input(argc, 1, "./database <port>");
     char *port = argv[1];
     int listening_sd = server_setup(port);
+    // create semaphore
     int sem_id = error_check("creating semaphore", semget(KEY, 1, IPC_CREAT | 0644));
+    // create database
+    struct table *db = NULL;
+    // converse
     while (1) {
         int client_sd = get_client(listening_sd);
         if (!fork()) { // child
             close(listening_sd);
-            fulfill(client_sd, sem_id); // do stuff!
+            fulfill(client_sd, sem_id, db); // do stuff!
             close(client_sd);
             exit(0);
         } else close(client_sd); // parent
@@ -56,35 +60,74 @@ int get_client(int listening_sd) {
     return client_sd;
 }
 
-void fulfill(int client_sd, int sem_id) {
+void fulfill(int client_sd, int sem_id, struct table *db) {
     char query_buf[BUFFER_SIZE];
     error_check("receiving", (int) recv(client_sd, query_buf, sizeof(query_buf), 0));
     printf("[subserver %d] received query, processing\n", getpid());
-    char *response_buf = process(query_buf, sem_id);
+    char *response_buf = process(query_buf, sem_id, db);
     error_check("responding", (int) send(client_sd, response_buf, BUFFER_SIZE, 0));
     free(response_buf);
-
 }
 
-char *process(char *query, int sem_id) {
+char *process(char *query, int sem_id, struct table *db) {
     char *response = calloc(BUFFER_SIZE, sizeof(char));
     char *command;
     while ((command = strsep(&query, ";"))) {
-        if (!strncmp(query, "create", 6)) {
+        char *action = next_word(&command);
+        if (!strcmp(action, "create")) {
+            create(command, sem_id, db);
+        } else if (!strcmp(action, "insert")) {
 
-        } else if (!strncmp(query, "insert", 6)) {
+        } else if (!strcmp(action, "read")) {
 
-        } else if (!strncmp(query, "read", 4)) {
+        } else if (!strcmp(action, "update")) {
 
-        } else if (!strncmp(query, "update", 6)) {
+        } else if (!strcmp(action, "delete")) {
 
-        } else if (!strncmp(query, "delete", 6)) {
-
-        } else if (!strncmp(query, "drop", 4)) {
+        } else if (!strcmp(action, "drop")) {
 
         } else {
 
         }
     }
     return response;
+}
+
+void create(char *query, int sem_id, struct table *db) {
+    char *name = next_word(&query);
+    if (!is_alpha(name)) printf("invalid table name\n");
+    struct table *t = malloc(sizeof(struct table));
+    strcat(t->name, "table_");
+    strcat(t->name, name);
+    t->columns = NULL;
+    init_columns(query, t);
+    HASH_ADD_KEYPTR(hh, db, t->name, strlen(t->name), t);
+}
+
+void init_columns(char *query, struct table *t) {
+    // make sure there was nothing invalid before '{'
+    char *prev = strsep(&query, "{");
+    for (; *prev == ' '; prev++);
+    if (*prev) printf("invalid syntax\n");
+    // strip end
+    query = strsep(&query, "}");
+    // iterate by commas
+    char *header;
+    while ((header = strsep(&query, ","))) {
+        // create column
+        struct column *col = malloc(sizeof(struct column));
+        // set type
+        char *type_str = next_word(&header);
+        unsigned char type = (unsigned char) -1;
+        int str_len;
+        if (!strcmp(type_str, "int"))type = INT;
+        else if (!strcmp(type_str, "double")) type = DBL;
+        else if (!strncmp(type_str, "string", 6)) {
+            type = STR;
+            // parse size of string
+            str_len = DATA_SIZE; // todo: fix that
+        } else printf("invalid type");
+        col->type = type;
+
+    }
 }
