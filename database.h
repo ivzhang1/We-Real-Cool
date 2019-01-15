@@ -1,3 +1,13 @@
+#include <stdio.h>
+#include <unistd.h>
+#include <sys/sem.h>
+#include <sys/socket.h>
+#include <stdlib.h>
+#include <netdb.h>
+
+#include "commons.h"
+#include "table.h"
+
 # define KEY 314159265
 
 union semun {

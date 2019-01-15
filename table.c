@@ -1,32 +1,37 @@
 #include "table.h"
 
-void print_row(struct table *t, int index){
-    printf("| ");
+char *str_row(struct table *t, int index){
+    char *s = malloc(BUFFER_SIZE);
+    char *d = s;
+    d += sprintf(d, "| ");
     for (int i = 0; i < t->num_columns; i ++)
         if (t->types[i] == INT)
-            printf("[%d] | ", get(t->al, index).values[i].integer);
+            d += sprintf(d, "[%d] | ", get(t->al, index).values[i].integer);
         else if (t->types[i] == DOUBLE)
-            printf("[%lf] | ", get(t->al, index).values[i].decimal);
+            d += sprintf(d, "[%lf] | ", get(t->al, index).values[i].decimal);
         else if (t->types[i] == STRING)
-            printf("[%s] | ", get(t->al, index).values[i].string);
-    printf("\n");
+            d += sprintf(d, "[%s] | ", get(t->al, index).values[i].string);
+    d += sprintf(d, "\n");
+    return s;
 }
 
-void print_table(struct table *t, int *read){
-    // printf("Table: [%s]\n", t->name);
-    printf("| ");
+char *str_table(struct table *t, int *read){
+    char *s = malloc(BUFFER_SIZE);
+    char *d = s;
+    d += sprintf(d, "| ");
     for (int i = 0; i < t->num_columns; i ++)
-        printf("[%s] | ", t->col_names[i]);
-    printf("\n");
+        d += sprintf(d, "[%s] | ", t->col_names[i]);
+    d += sprintf(d, "\n");
 
-    for (int i = 0; i < t->al->num_rows; i ++){
-        if (read[i])
-            print_row(t, i);
+    for (int i = 0; i < t->al->num_rows; i ++)
+        if (read[i]){
+            d = str_row(t, i);
+            strcat(s, d);
+            free(d);
+        }
         // printf("\n");
-    }
+    return s;
 }
-
-
 
 //removes begining and ending spaces
 char *rs(char *str){
@@ -82,17 +87,14 @@ void initialize(struct table *t, int i){
     construct(t->al);
 }
 
-void set_tag(struct table *t, int j, char *tag){
+char *set_tag(struct table *t, int j, char *tag){
     // printf("[%s]\n", tag);
+    char *s = malloc(BUFFER_SIZE);
     if (!strcmp(tag, "-primarykey")){
-        // if (t->tags[pos(j, DEFAULT)]){
-        //     printf("-primarykey cannot coexist with -default\n");
-        //     return;
-        // }
         for (int i = 0; i < j; i ++)
             if (t->tags[i] == PRIMARY_KEY){
-                printf("each table has at most 1 -primarykey column\n");
-                return;
+                strcpy(s, "each table has at most 1 -primarykey column\n");
+                return s;
             }
         t->tags[j] = PRIMARY_KEY;
     }
@@ -110,14 +112,17 @@ void set_tag(struct table *t, int j, char *tag){
         else if (t->types[j] == STRING)
             t->defaults[j].string = val;
     }
+    free(s);
+    return 0;
 }
 
-void create_table(char *str, struct database *db){
+char *create_table(char *str, struct database *db){
 
+    char *s = malloc(BUFFER_SIZE);
     char *tname = rs( strsep(&str, "{") );
     if (get_table(tname, db)){
-      printf("table: %s exists\n", tname);
-      return;
+      sprintf(s, "table: %s exists\n", tname);
+      return s;
     }
 
     struct table *t = db->tables + db->num_tables;
@@ -154,8 +159,8 @@ void create_table(char *str, struct database *db){
         else if ( !strcmp(type[j], "string") )
             t->types[j] = STRING;
         else {
-            printf("invalid type: %s\n", type[j]);
-            return;
+            sprintf(s, "invalid type: %s\n", type[j]);
+            return s;
         }
         t->col_names[j] = name[j];
         if (tag = strsep(piece + j, " "))
@@ -165,6 +170,8 @@ void create_table(char *str, struct database *db){
     // return t;
     free(piece);
     free(type);
+    free(s);
+    return 0;
 }
 
 int index_of(struct table *t, char *col){
@@ -203,7 +210,7 @@ int *bool_and(struct table *t, char **piece, int c){
                     read[r] += get(t->al, r).values[index].decimal != atof(val);
                 else if (t->types[index] == STRING){
                     if (!str){
-                        printf("syntax error: need quotation marks for text field\n");
+                        // printf("syntax error: need quotation marks for text field\n");
                         return 0;
                     }
                     read[r] += strcmp(get(t->al, r).values[index].string, str);
@@ -234,7 +241,8 @@ int *bool_or(struct table *t, char **piece, int c){
             ctr ++;
         }
         subread = bool_and(t, subpiece, ctr);
-        if (!subread) return 0;
+        if (!subread)
+            return 0;
         free(subpiece);
         for (int r = 0; r < t->al->num_rows; r ++)
             read[r] += subread[r];
@@ -247,7 +255,9 @@ int *bool_or(struct table *t, char **piece, int c){
     // free(read);
 }
 
-void read_spec(struct table *t, char *expr){
+char *read_spec(struct table *t, char *expr){
+
+    char *s = malloc(BUFFER_SIZE);
     expr = rs(expr);
     char **piece = calloc(strlen(expr), sizeof(char *));
     // piece[0] = expr;
@@ -260,35 +270,43 @@ void read_spec(struct table *t, char *expr){
     }
     // printf("%d\n", ctr);
     int *read = bool_or(t, piece, ctr);
-    if (!read) return;
+    if (!read){
+        strcpy(s, "syntax error");
+        return s;
+    }
     free(piece);
-
-    print_table(t, read);
+    free(s);
+    s = str_table(t, read);
     free(read);
+    return s;
 }
 
-void read_table(char *str, struct database *db){
+char *read_table(char *str, struct database *db){
 
+    char *s = malloc(BUFFER_SIZE);
     str = rs(str);
+    // printf("[%s]\n", str);
     // printf("%s\n", db->tables[0].name);
     // print_table(&(db->tables[0]));
     // printf("[%s]\n", str);
     char *tname = rs( strsep(&str, " {") );
     struct table *t = get_table(tname, db);
     if (!t){
-        printf("table does not exist\n");
-        return;
+        strcpy(s, "table does not exist\n");
+        return s;
     }
     // printf("[%s]\n", str);
     str = rs(str);
     // printf("[%s]\n", str);
     if ( !strncmp(str, "all", 3) ){
-        if ( !*(str + 4) ){
+        // printf("[%s]", str + 3);
+        if ( !str[3] ){
+            // printf("#");
             int read[t->al->num_rows];
             for (int i = 0; i < t->al->num_rows; i ++)
                 read[i] = 1;
-            print_table(t, read);
-            return;
+            free(s);
+            return str_table(t, read);
         }
         strsep(&str, " ");
         str = rs(str);
@@ -296,25 +314,28 @@ void read_table(char *str, struct database *db){
         while (piece = strsep(&str, ",")){
             piece = rs(piece);
             if ( !strncmp(piece, "where ", 6) ){
-                read_spec(t, piece + 6);
+                free(s);
+                return read_spec(t, piece + 6);
             }
         }
         // strsep(&str, " ");
 
     }
+    free(s);
+    return 0;
 
 }
 
-void insert(char *str, struct database *db){
-
+char *insert(char *str, struct database *db){
+    char *s = malloc(BUFFER_SIZE);
     str = rs(str);
     // printf("%s\n", db->tables[0].name);
     // print_table(&(db->tables[0]));
     char *tname = rs( strsep(&str, "{") );
     struct table *t = get_table(tname, db);
     if (!t){
-        printf("table does not exist\n");
-        return;
+        strcpy(s, "table does not exist\n");
+        return s;
     }
     char *data = strsep(&str, "}");
     char *row, *piece, *col;
@@ -325,8 +346,8 @@ void insert(char *str, struct database *db){
         row = strsep(&data, ")");
         // printf("[%s]\n", row);
         if (!data){
-            printf("missing closing ')'\n");
-            return;
+            strcpy(s, "missing closing ')'\n");
+            return s;
         }
         r = malloc(sizeof(struct row));
         r->values = calloc(t->num_columns, sizeof(union value));
@@ -339,8 +360,8 @@ void insert(char *str, struct database *db){
             piece = rs(piece);
             i = index_of(t, col);
             if (i == -1){
-                printf("column does not exist\n");
-                return;
+                strcpy(s, "column does not exist\n");
+                return s;
             }
             if (t->types[i] == INT)
                 r->values[i].integer = atoi(piece);
@@ -349,8 +370,8 @@ void insert(char *str, struct database *db){
             else if (t->types[i] == STRING){
                 piece = rq(piece);
                 if (!piece){
-                    printf("syntax error: need quotation marks for text field\n");
-                    return;
+                    strcpy(s, "syntax error: need quotation marks for text field\n");
+                    return s;
                 }
                 r->values[i].string = piece;
             }
@@ -382,8 +403,8 @@ void insert(char *str, struct database *db){
                         r->values[j].decimal = t->defaults[j].decimal;
                 }
                 else {
-                    printf("insert failed: incomplete row\n");
-                    return;
+                    strcpy(s, "insert failed: incomplete row\n");
+                    return s;
                 }
             }
             else
@@ -393,24 +414,28 @@ void insert(char *str, struct database *db){
         free(r);
         // printf("[%s]\n", data);
     }
+    free(s);
+    return 0;
 }
 
-void delete(char *str, struct database *db){
+char *delete(char *str, struct database *db){
+    char *s = malloc(BUFFER_SIZE);
     str = rs(str);
     char *tname = strsep(&str, " ");
     struct table *t = get_table(tname, db);
     if (!t){
-        printf("table does not exist\n");
-        return;
+        strcpy(s, "table does not exist\n");
+        return s;
     }
     if (!str){
         while(t->al->num_rows)
             remov(t->al, t->al->num_rows - 1);
-        return;
+        free(s);
+        return 0;
     }
     if ( strncmp(str, "where ", 6) ){
-        printf("invalid syntax\n");
-        return;
+        strcpy(s, "invalid syntax\n");
+        return s;
     }
     str += 6;
     str = rs(str);
@@ -434,11 +459,14 @@ void delete(char *str, struct database *db){
             i --;
         }
     free(read);
+    free(s);
+    return 0;
 }
 
-void drop(char *str, struct database *db){
+char *drop(char *str, struct database *db){
+    char *s = malloc(BUFFER_SIZE);
     struct table *t = 0;
-    // printf("%s\n", db->tables[0].name);
+    // strcpy(s, "%s\n", db->tables[0].name);
     // print_table(&(db->tables[0]));
     str = rs(str);
     int i;
@@ -446,27 +474,30 @@ void drop(char *str, struct database *db){
         if ( !strcmp(db->tables[i].name, str) )
             t = db->tables + i;
     if (!t){
-        printf("table does not exist\n");
-        return;
+        strcpy(s, "table does not exist\n");
+        return s;
     }
 
     for (int j = i; j < db->num_tables - 1; j ++)
         db->tables[i] = db->tables[i + 1];
     db->num_tables --;
+    free(s);
+    return 0;
 }
 
-void sort(char *str, struct database *db){
+char *sort(char *str, struct database *db){
+    char *s = malloc(BUFFER_SIZE);
     str = rs(str);
     char *tname = strsep(&str, " ");
     struct table *t = get_table(tname, db);
     if (!t){
-        printf("table does not exist\n");
-        return;
+        strcpy(s, "table does not exist\n");
+        return s;
     }
     str = rs(str);
     if ( strncmp(str, "by ", 3) ){
-        printf("invalid syntax\n");
-        return;
+        strcpy(s, "invalid syntax\n");
+        return s;
     }
     char *col = rs(str + 3);
     // printf("%s\n", t->col_names[3]);
@@ -475,35 +506,45 @@ void sort(char *str, struct database *db){
         if (!strcmp(col, t->col_names[i])){
             // printf("%d", t->types[i]);
             quick_sort(t->al, i, t->types[i]);
-            return;
+            free(s);
+            return 0;
         }
     }
     // printf("[%s]\n", col);
-    printf("column does not exist\n");
+    strcpy(s, "column does not exist\n");
+    return s;
 }
 
-void update(char *str, struct database *db){
-
+char *update(char *str, struct database *db){
+    return 0;
 }
 
-void execute(char *str, struct database *db){
+char *execute(char *str, struct database *db){
+    char *s;
     str = rs(str);
     if (!strncmp(str, "create ", 7))
-        create_table(str + 7, db);
+        s = create_table(str + 7, db);
     else if (!strncmp(str, "read ", 5))
-        read_table(str + 5, db);
+        s = read_table(str + 5, db);
     else if (!strncmp(str, "insert ", 7))
-        insert(str + 7, db);
+        s = insert(str + 7, db);
     else if (!strncmp(str, "update ", 7))
-        update(str + 7, db);
+        s = update(str + 7, db);
     else if (!strncmp(str, "delete ", 7))
-        delete(str + 7, db);
+        s = delete(str + 7, db);
     else if (!strncmp(str, "drop ", 5))
-        drop(str + 5, db);
+        s = drop(str + 5, db);
     else if (!strncmp(str, "sort ", 5))
-        sort(str + 5, db);
-    else
-        printf("invalid command\n");
+        s = sort(str + 5, db);
+    else{
+        s = malloc(BUFFER_SIZE);
+        strcpy(s, "invalid command\n");
+    }
+    if (s)
+        return s;
+    s = malloc(1);
+    strcpy(s, "");
+    return s;
 }
 
 int main(){
@@ -512,25 +553,26 @@ int main(){
     db->tables = calloc(10, sizeof(struct table));
     db->num_tables = 0;
     char a[] = "   create  oof  {  int   i  ,  double    d   ,  string   s  } ";
-    execute(a, db);
+    printf("%s", execute(a, db));
 
     char b[] = "  insert    oof  { (   i:5, d:91.7  , s:\"smd\" )(d:2.718 , i:1024 ,   s:\"xD\" )  (d:5, s:\"oof\", i:6 )(  i:3 ,d: 6.9 ,s : \"lmao\" ) (   i:5, d:3.14  ,s  : \"UwU\" )  }";
-    execute(b, db);
+    printf("%s", execute(b, db));
 
-
-    char c[] = " read   oof   all where s = \"UwU\" | ";
-    execute(c, db);
+    //
+    char c[] = " read   oof   all where i = 5";
+    printf("%s", execute(c, db));
 
     char d[] = "  sort  oof by  d ";
-    execute(d, db);
+    printf("%s", execute(d, db));
 
     char e[] = "create  foo  { int n  -primarykey, int  ctr -autoinc,  double x  -default(3.14), string txt }";
-    execute(e, db);
+    printf("%s", execute(e, db));
 
     char f[] = "insert foo { (txt: \"this is fun\") (txt: \"boba\", x:5.56, ctr: 8) (txt:\"asdf\") }";
-    execute(f, db);
-    // printf("%d\n", db->tables[1].tags[pos(2, 3)]);
-    // print_table(&(db->tables[1]));
+    printf("%s", execute(f, db));
+
+    char g[] = "read foo all";
+    printf("%s", execute(g, db));
 
     return 0;
 }

@@ -1,18 +1,11 @@
-
-#include <stdio.h>
-#include <unistd.h>
-#include <sys/sem.h>
-#include <sys/socket.h>
-#include <stdlib.h>
-#include <netdb.h>
 #include "database.h"
-#include "commons.h"
 
 int main(int argc, char * argv[]) {
     check_input(argc, 1, "./database <port>");
     char *port = argv[1];
     int listening_sd = server_setup(port);
     int sem_id = error_check("creating semaphore", semget(KEY, 1, IPC_CREAT | 0644));
+    
     while (1) {
         int client_sd = get_client(listening_sd);
         if (!fork()) { // child
@@ -66,7 +59,13 @@ void fulfill(int client_sd, int sem_id) {
 }
 
 char * process(char *query, int sem_id) {
-    char *response = calloc(BUFFER_SIZE, sizeof(char));
-
+    struct sembuf *buf;
+    buf->sem_op = -1;
+    buf->sem_num = 0;
+    buf->sem_flg = SEM_UNDO;
+    semop(sem_id, buf, 1);
+    char *response = execute(query);
+    buf->sem_op = 1;
+    semop(sem_id, buf, 1);
     return response;
 }
