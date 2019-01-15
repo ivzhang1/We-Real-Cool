@@ -74,7 +74,7 @@ struct table *get_table(char *tname, struct database *db){
 void initialize(struct table *t, int i){
     t->num_columns = i;
     t->types = calloc(i, sizeof(int));
-    t->tags = calloc(i * 3, sizeof(int));
+    t->tags = calloc(i, sizeof(int));
     t->col_names = calloc(i, sizeof(char *));
     t->defaults = calloc(i, sizeof(union value));
     t->al = malloc(sizeof(struct array_list));
@@ -519,7 +519,6 @@ int main(){
 
     char b[] = "  insert    oof  { (   i:5, d:91.7  , s:\"smd\" )(d:2.718 , i:1024 ,   s:\"xD\" )  (d:5, s:\"oof\", i:6 )(  i:3 ,d: 6.9 ,s : \"lmao\" ) (   i:5, d:3.14  ,s  : \"UwU\" )  }";
     execute(b, db);
-    // print_table(&(db->tables[0]));
 
 
     char c[] = " read   oof   all where  3  = 3";
