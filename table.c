@@ -547,32 +547,32 @@ char *execute(char *str, struct database *db){
     return s;
 }
 
-int main(){
-    // int shm_id = shmget(KEY, SEG_SIZE, IPC_CREAT | 0644);
-    struct database *db = malloc( sizeof(struct database) );
-    db->tables = calloc(10, sizeof(struct table));
-    db->num_tables = 0;
-    char a[] = "   create  oof  {  int   i  ,  double    d   ,  string   s  } ";
-    printf("%s", execute(a, db));
-
-    char b[] = "  insert    oof  { (   i:5, d:91.7  , s:\"smd\" )(d:2.718 , i:1024 ,   s:\"xD\" )  (d:5, s:\"oof\", i:6 )(  i:3 ,d: 6.9 ,s : \"lmao\" ) (   i:5, d:3.14  ,s  : \"UwU\" )  }";
-    printf("%s", execute(b, db));
-
-    //
-    char c[] = " read   oof   all where i = 5";
-    printf("%s", execute(c, db));
-
-    char d[] = "  sort  oof by  d ";
-    printf("%s", execute(d, db));
-
-    char e[] = "create  foo  { int n  -primarykey, int  ctr -autoinc,  double x  -default(3.14), string txt }";
-    printf("%s", execute(e, db));
-
-    char f[] = "insert foo { (txt: \"this is fun\") (txt: \"boba\", x:5.56, ctr: 8) (txt:\"asdf\") }";
-    printf("%s", execute(f, db));
-
-    char g[] = "read foo all";
-    printf("%s", execute(g, db));
-
-    return 0;
-}
+// int main(){
+//     // int shm_id = shmget(KEY, SEG_SIZE, IPC_CREAT | 0644);
+//     struct database *db = malloc( sizeof(struct database) );
+//     db->tables = calloc(10, sizeof(struct table));
+//     db->num_tables = 0;
+//     char a[] = "   create  oof  {  int   i  ,  double    d   ,  string   s  } ";
+//     printf("%s", execute(a, db));
+//
+//     char b[] = "  insert    oof  { (   i:5, d:91.7  , s:\"smd\" )(d:2.718 , i:1024 ,   s:\"xD\" )  (d:5, s:\"oof\", i:6 )(  i:3 ,d: 6.9 ,s : \"lmao\" ) (   i:5, d:3.14  ,s  : \"UwU\" )  }";
+//     printf("%s", execute(b, db));
+//
+//     //
+//     char c[] = " read   oof   all where i = 5";
+//     printf("%s", execute(c, db));
+//
+//     char d[] = "  sort  oof by  d ";
+//     printf("%s", execute(d, db));
+//
+//     char e[] = "create  foo  { int n  -primarykey, int  ctr -autoinc,  double x  -default(3.14), string txt }";
+//     printf("%s", execute(e, db));
+//
+//     char f[] = "insert foo { (txt: \"this is fun\") (txt: \"boba\", x:5.56, ctr: 8) (txt:\"asdf\") }";
+//     printf("%s", execute(f, db));
+//
+//     char g[] = "read foo all";
+//     printf("%s", execute(g, db));
+//
+//     return 0;
+// }
