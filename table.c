@@ -61,28 +61,42 @@ char *rq(char *str){
     return 0;
 }
 
-int hs(char *str){
-    while (*str){
-        if (!strncmp(str, " ", 1))
-            return 1;
-        str ++;
-    }
-    return 0;
-}
-
-void set_val(struct table *t, int row, int col, int type, int tag, char *new_val){
-    union value *val;
+void set_val(struct table *t, int row, int col, int type, int tag, char *val){
+    union value *target;
     if (row == -1)
-        val = t->defaults + col;
+        target = t->defaults + col;
     else
-        val = get(t->al, row)->values + col;
+        target = get(t->al, row)->values + col;
+
+    double num;
+    if (!val){
+        if (tag == PRIMARY_KEY || tag == AUTO_INC){
+            if (!row)
+                num = 0;
+            else if (type == INT)
+                num = get(t->al, row - 1)->values[col].integer + 1;
+            else if (type == DOUBLE)
+                num = get(t->al, row - 1)->values[col].decimal + 1;
+        }
+        else if (tag == DEFAULT){
+            if (type == INT)
+                num = t->defaults[col].integer;
+            else if (type == DOUBLE)
+                num = t->defaults[col].decimal;
+            else if (type == STRING)
+                val = t->defaults[col].string;
+        }
+    }
+    else {
+        num = atof(val);
+    }
 
     if (type == INT)
-        val->integer = atoi(new_val);
+        target->integer = num;
     else if (type == DOUBLE)
-        val->decimal = atof(new_val);
+        target->decimal = num;
     else if (type == STRING)
-        val->string = new_val;
+        target->string = val;
 }
 
 struct table *get_table(char *tname, struct database *db){
@@ -192,45 +206,133 @@ int index_of(struct table *t, char *col){
     return -1;
 }
 
+int get_sign(char *piece){
+    while (*piece){
+        if (!strncmp(piece, ">", 1))
+            return GREATER;
+        else if (!strncmp(piece, "=", 1))
+            return EQUAL;
+        else if (!strncmp(piece, "<", 1))
+            return LESS;
+        piece ++;
+    }
+    return 2;
+}
+
+int evaluate(struct table *t, int row, int col0, int col1, int type0, int type1, int sign, char *val){
+    // int read = calloc(t->al->num_rows, sizeof(int));
+    union value *target0 = get(t->al, row)->values + col0;
+    union value *target1;
+    if (col1 == -1){
+        if (type0 == INT){
+            if (!sign)
+                return target0->integer != atoi(val);
+            else
+                return (target0->integer - atoi(val)) / sign < 0;
+        }
+        else if (type0 == DOUBLE){
+            if (!sign)
+                return target0->decimal != atof(val);
+            else
+                return (target0->decimal - atof(val)) / sign < 0;
+        }
+        else if (type0 == STRING){
+            if (!sign)
+                return strcmp(target0->string, val);
+            else
+                return strcmp(target0->string, val) / sign < 0;
+        }
+
+    }
+    else {
+        target1 = get(t->al, row)->values + col1;
+
+        if (type0 == INT){
+            if (type1 == INT){
+                if (!sign)
+                    return target0->integer != target1->integer;
+                else
+                    return (target0->integer - target1->integer) / sign < 0;
+            }
+            else if (type1 == DOUBLE){
+                if (!sign)
+                    return target0->integer != target1->decimal;
+                else
+                    return (target0->integer - target1->decimal) / sign < 0;
+            }
+            else
+                return -1;
+        }
+        else if (type0 == DOUBLE){
+            if (type1 == INT){
+                if (!sign)
+                    return target0->decimal != target1->integer;
+                else
+                    return (target0->decimal - target1->integer) / sign < 0;
+            }
+            else if (type1 == DOUBLE){
+                if (!sign)
+                    return target0->decimal != target1->decimal;
+                else
+                    return (target0->decimal - target1->decimal) / sign < 0;
+            }
+            else
+                return -1;
+        }
+        else if (type0 == STRING){
+            if (type1 == STRING){
+                if (!sign)
+                    return strcmp(target0->string, target1->string);
+                else
+                    return strcmp(target0->string, target1->string) / sign < 0;
+            }
+            else
+                return -1;
+        }
+
+    }
+    return -1;
+}
+
 int *bool_and(struct table *t, char **piece, int c){
-    char *col, *val, *str;
-    int val_int;
-    double val_double;
-    char *val_str;
-    int col_exists;
+    char *col0, *col1, *temp = 0;
+    // int val_int;
+    // double val_double;
+    // char *val_str;
+    int sign, val;
     int *read = calloc(t->al->num_rows, sizeof(int));
     for (int i = 0; i < c; i ++){
-        col = rs( strsep(piece + i, "=") );
-        val = rs( piece[i] );
-        str = rq(val);
-        int index = index_of(t, col);
-        if (index == -1){
-            val_int = atoi(col);
-            val_double = atof(col);
-            val_str = rq(col);
-            col_exists = 0;
-        }
-        else
-            col_exists = 1;
-        for (int r = 0; r < t->al->num_rows; r ++)
-            if (col_exists)
-                if (t->types[index] == INT)
-                    read[r] += get(t->al, r)->values[index].integer != atoi(val) ;
-                else if (t->types[index] == DOUBLE)
-                    read[r] += get(t->al, r)->values[index].decimal != atof(val);
-                else if (t->types[index] == STRING){
-                    if (!str){
-                        // printf("syntax error: need quotation marks for text field\n");
+        sign = get_sign(piece[i]);
+        if (sign == 2)
+            return 0;
+        col0 = rs( strsep(piece + i, ">=<") );
+        col1 = rs( piece[i] );
+        // str = rq(val);---------------------------------------------------------------------------------------------------
+        int index0 = index_of(t, col0);
+        int index1 = index_of(t, col1);
+        if (index1 == -1){
+            if (index0 == -1){
+                val = !strcmp(col0, col1);
+                for (int r = 0; r < t->al->num_rows; r ++)
+                    read[r] += val;
+            }
+            else {
+                for (int r = 0; r < t->al->num_rows; r ++){
+                    val = evaluate(t, r, index0, 0, t->types[index0], 0, sign, col1);
+                    if (val == -1)
                         return 0;
-                    }
-                    read[r] += strcmp(get(t->al, r)->values[index].string, str);
+                    read[r] += val;
                 }
-                else
+            }
+        }
+        else {
+            for (int r = 0; r < t->al->num_rows; r ++){
+                val = evaluate(t, r, index0, index1, t->types[index0], t->types[index1], sign, 0);
+                if (val == -1)
                     return 0;
-            else
-                read[r] += !(val_int && val_int == atoi(val) ||
-                             val_double && val_double == atof(val) ||
-                             val_str && !strcmp(val_str, str) );
+                read[r] += val;
+            }
+        }
     }
     for (int r = 0; r < t->al->num_rows; r ++)
         read[r] = !read[r];
@@ -387,40 +489,23 @@ char *insert(char *str, struct database *db){
             }
             fill[i] = 1;
         }
+        add(t->al, r);
+
         for (int j = 0; j < t->num_columns; j ++){
             // printf("%d\n", fill[j]);
+
             if (!fill[j]){
-                // printf("%d\n", j);
-                if (t->tags[j] == PRIMARY_KEY || t->tags[j] == AUTO_INC){
-                    // printf("%d\n", j);
-                    if (t->types[j] == INT){
-                        if (t->al->num_rows == 0)
-                            r->values[j].integer = 0;
-                        else
-                            r->values[j].integer = get(t->al, t->al->num_rows - 1)->values[j].integer + 1;
-                    }
-                    else if (t->types[j] == DOUBLE){
-                        if (t->al->num_rows == 0)
-                            r->values[j].decimal = 0;
-                        else
-                            r->values[j].decimal = get(t->al, t->al->num_rows - 1)->values[j].decimal + 1;
-                    }
-                }
-                else if (t->tags[j] == DEFAULT){
-                    if (t->types[j] == INT)
-                        r->values[j].integer = t->defaults[j].integer;
-                    else if (t->types[j] == DOUBLE)
-                        r->values[j].decimal = t->defaults[j].decimal;
-                }
-                else {
+                if (!t->tags[j]){
+                    remov(t->al, t->al->num_rows - 1);
                     strcpy(s, "insert failed: incomplete row\n");
                     return s;
                 }
+                else
+                    set_val(t, t->al->num_rows - 1, j, t->types[j], t->tags[j], 0);
             }
             else
                 fill[j] = 0;
         }
-        add(t->al, r);
         // printf("[%s]\n", data);
     }
     free(s);

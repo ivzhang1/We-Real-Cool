@@ -24,6 +24,10 @@
 #define AUTO_INC 2
 #define DEFAULT 3
 
+#define GREATER 1
+#define EQUAL 0
+#define LESS -1
+
 struct table {
     char name[DATA_SIZE];
     int *tags;
@@ -49,7 +53,6 @@ char *rs(char *str);
 //removes quotation marks
 char *rq(char *str);
 
-int hs(char *str);
 
 void set_val(struct table *t, int row, int col, int type, int tag, char *new_val);
 
