@@ -1,12 +1,4 @@
-#include <stdio.h>
-#include <unistd.h>
-#include <sys/socket.h>
-#include <netdb.h>
-#include <string.h>
-#include <fcntl.h>
-#include <stdlib.h>
 #include "client.h"
-#include "commons.h"
 
 int main(int argc, char * argv[]) {
     check_input(argc, 2, "./client <ip> <port>");
