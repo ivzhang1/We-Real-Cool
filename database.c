@@ -12,7 +12,7 @@ int main(int argc, char * argv[]) {
     check_input(argc, 1, "./database <port>");
     char *port = argv[1];
     int listening_sd = server_setup(port);
-    int sem_id = error_check("creating semaphore", semget(KEY, 1, IPC_CREAT | 0644));
+    int sem_id = sem_setup();
     while (1) {
         int client_sd = get_client(listening_sd);
         if (!fork()) { // child
@@ -22,6 +22,13 @@ int main(int argc, char * argv[]) {
             exit(0);
         } else close(client_sd); // parent
     }
+}
+
+int sem_setup() {
+    int sem_id = error_check("creating semaphore", semget(KEY, 1, IPC_CREAT | 0644));
+    union semun ctl = {.val = 1};
+    semctl(sem_id, 0, SETVAL, ctl);
+    return sem_id;
 }
 
 int server_setup(char *port) {
@@ -59,7 +66,15 @@ void fulfill(int client_sd, int sem_id) {
     char query_buf[BUFFER_SIZE];
     error_check("receiving", (int) recv(client_sd, query_buf, sizeof(query_buf), 0));
     printf("[subserver %d] received query, processing\n", getpid());
+    struct sembuf *sbuf = malloc(sizeof(struct sembuf));
+    sbuf->sem_op = -1;
+    sbuf->sem_num = 0;
+    sbuf->sem_flg = SEM_UNDO;
+    semop(sem_id, sbuf, 1);
     char *response_buf = process(query_buf, sem_id);
+    sbuf->sem_op = 1;
+    semop(sem_id, sbuf, 1);
+    free(sbuf);
     error_check("responding", (int) send(client_sd, response_buf, BUFFER_SIZE, 0));
     free(response_buf);
 

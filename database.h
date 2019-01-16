@@ -7,6 +7,8 @@ union semun {
     struct seminfo *__buf;
 };
 
+int sem_setup();
+
 int server_setup(char *port);
 
 int get_client(int listening_sd);
