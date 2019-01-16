@@ -9,8 +9,6 @@
 #include "al.h"
 #include "qs.h"
 
-#define KEY 52013
-
 #define SEG_SIZE 0xffff
 #define BUFFER_SIZE 1024
 #define DATA_SIZE 256
@@ -41,25 +39,42 @@ struct database {
     int num_tables;
 };
 
-void print_row(struct table *t, int index);
+char *str_row(struct table *t, int index);
 
-void print_table(struct table *t, int *read);
+char *str_table(struct table *t, int *read);
 
 //removes begining and ending spaces
 char *rs(char *str);
 
+//removes quotation marks
+char *rq(char *str);
+
 int hs(char *str);
 
-void create_table(char *str, struct database *db);
+struct table *get_table(char *tname, struct database *db);
 
-void read_table(char *str, struct database *db);
+void initialize(struct table *t, int i);
 
-void insert(char *str, struct database *db);
+char *set_tag(struct table *t, int j, char *tag);
 
-void delete(char *str, struct database *db);
+char *create_table(char *str, struct database *db);
 
-void drop(char *str, struct database *db);
+int index_of(struct table *t, char *col);
 
-void sort(char *str, struct database *db);
+int *bool_and(struct table *t, char **piece, int c);
 
-void execute(char *str, struct database *db);
+int *bool_or(struct table *t, char **piece, int c);
+
+char *read_spec(struct table *t, char *expr);
+
+char *insert(char *str, struct database *db);
+
+char *delete(char *str, struct database *db);
+
+char *drop(char *str, struct database *db);
+
+char *sort(char *str, struct database *db);
+
+char *update(char *str, struct database *db);
+
+char *execute(char *str, struct database *db);
