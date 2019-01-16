@@ -20,7 +20,7 @@ struct row {
 };
 
 struct array_list {
-    struct row *rows;
+    struct row **rows;
     int num_rows;
     int max_size;
 };
@@ -29,12 +29,12 @@ void construct(struct array_list *al);
 
 void expand(struct array_list *al);
 
-struct row get(struct array_list *al, int index);
+struct row *get(struct array_list *al, int index);
 
-struct row set(struct array_list *al, int index, struct row new_row);
+struct row *set(struct array_list *al, int index, struct row *new_row);
 
-void add(struct array_list *al, struct row new_row);
+void add(struct array_list *al, struct row *new_row);
 
-struct row remov(struct array_list *al, int index);
+struct row *remov(struct array_list *al, int index);
 
 #endif

@@ -6,11 +6,11 @@ char *str_row(struct table *t, int index){
     d += sprintf(d, "| ");
     for (int i = 0; i < t->num_columns; i ++)
         if (t->types[i] == INT)
-            d += sprintf(d, "[%d] | ", get(t->al, index).values[i].integer);
+            d += sprintf(d, "[%d] | ", get(t->al, index)->values[i].integer);
         else if (t->types[i] == DOUBLE)
-            d += sprintf(d, "[%lf] | ", get(t->al, index).values[i].decimal);
+            d += sprintf(d, "[%lf] | ", get(t->al, index)->values[i].decimal);
         else if (t->types[i] == STRING)
-            d += sprintf(d, "[%s] | ", get(t->al, index).values[i].string);
+            d += sprintf(d, "[%s] | ", get(t->al, index)->values[i].string);
     d += sprintf(d, "\n");
     return s;
 }
@@ -205,15 +205,15 @@ int *bool_and(struct table *t, char **piece, int c){
         for (int r = 0; r < t->al->num_rows; r ++)
             if (col_exists)
                 if (t->types[index] == INT)
-                    read[r] += get(t->al, r).values[index].integer != atoi(val) ;
+                    read[r] += get(t->al, r)->values[index].integer != atoi(val) ;
                 else if (t->types[index] == DOUBLE)
-                    read[r] += get(t->al, r).values[index].decimal != atof(val);
+                    read[r] += get(t->al, r)->values[index].decimal != atof(val);
                 else if (t->types[index] == STRING){
                     if (!str){
                         // printf("syntax error: need quotation marks for text field\n");
                         return 0;
                     }
-                    read[r] += strcmp(get(t->al, r).values[index].string, str);
+                    read[r] += strcmp(get(t->al, r)->values[index].string, str);
                 }
                 else
                     return 0;
@@ -387,13 +387,13 @@ char *insert(char *str, struct database *db){
                         if (t->al->num_rows == 0)
                             r->values[j].integer = 0;
                         else
-                            r->values[j].integer = get(t->al, t->al->num_rows - 1).values[j].integer + 1;
+                            r->values[j].integer = get(t->al, t->al->num_rows - 1)->values[j].integer + 1;
                     }
                     else if (t->types[j] == DOUBLE){
                         if (t->al->num_rows == 0)
                             r->values[j].decimal = 0;
                         else
-                            r->values[j].decimal = get(t->al, t->al->num_rows - 1).values[j].decimal + 1;
+                            r->values[j].decimal = get(t->al, t->al->num_rows - 1)->values[j].decimal + 1;
                     }
                 }
                 else if (t->tags[j] == DEFAULT){
@@ -410,8 +410,7 @@ char *insert(char *str, struct database *db){
             else
                 fill[j] = 0;
         }
-        add(t->al, *r);
-        free(r);
+        add(t->al, r);
         // printf("[%s]\n", data);
     }
     free(s);
@@ -516,6 +515,16 @@ char *sort(char *str, struct database *db){
 }
 
 char *update(char *str, struct database *db){
+    char *s = malloc(BUFFER_SIZE);
+    str = rs(str);
+    // printf("%s\n", db->tables[0].name);
+    // print_table(&(db->tables[0]));
+    char *tname = rs( strsep(&str, "{") );
+    struct table *t = get_table(tname, db);
+    if (!t){
+        strcpy(s, "table does not exist\n");
+        return s;
+    }
     return 0;
 }
 
@@ -547,32 +556,32 @@ char *execute(char *str, struct database *db){
     return s;
 }
 
-// int main(){
-//     // int shm_id = shmget(KEY, SEG_SIZE, IPC_CREAT | 0644);
-//     struct database *db = malloc( sizeof(struct database) );
-//     db->tables = calloc(10, sizeof(struct table));
-//     db->num_tables = 0;
-//     char a[] = "   create  oof  {  int   i  ,  double    d   ,  string   s  } ";
-//     printf("%s", execute(a, db));
-//
-//     char b[] = "  insert    oof  { (   i:5, d:91.7  , s:\"smd\" )(d:2.718 , i:1024 ,   s:\"xD\" )  (d:5, s:\"oof\", i:6 )(  i:3 ,d: 6.9 ,s : \"lmao\" ) (   i:5, d:3.14  ,s  : \"UwU\" )  }";
-//     printf("%s", execute(b, db));
-//
-//     //
-//     char c[] = " read   oof   all where i = 5";
-//     printf("%s", execute(c, db));
-//
-//     char d[] = "  sort  oof by  d ";
-//     printf("%s", execute(d, db));
-//
-//     char e[] = "create  foo  { int n  -primarykey, int  ctr -autoinc,  double x  -default(3.14), string txt }";
-//     printf("%s", execute(e, db));
-//
-//     char f[] = "insert foo { (txt: \"this is fun\") (txt: \"boba\", x:5.56, ctr: 8) (txt:\"asdf\") }";
-//     printf("%s", execute(f, db));
-//
-//     char g[] = "read foo all";
-//     printf("%s", execute(g, db));
-//
-//     return 0;
-// }
+int main(){
+    // int shm_id = shmget(KEY, SEG_SIZE, IPC_CREAT | 0644);
+    struct database *db = malloc( sizeof(struct database) );
+    db->tables = calloc(10, sizeof(struct table));
+    db->num_tables = 0;
+    char a[] = "   create  oof  {  int   i  ,  double    d   ,  string   s  } ";
+    printf("%s", execute(a, db));
+
+    char b[] = "  insert    oof  { (   i:5, d:91.7  , s:\"smd\" )(d:2.718 , i:1024 ,   s:\"xD\" )  (d:5, s:\"oof\", i:6 )(  i:3 ,d: 6.9 ,s : \"lmao\" ) (   i:5, d:3.14  ,s  : \"UwU\" )  }";
+    printf("%s", execute(b, db));
+
+    //
+    char c[] = " read   oof   all where i = 5";
+    printf("%s", execute(c, db));
+
+    char d[] = "  sort  oof by  d ";
+    printf("%s", execute(d, db));
+
+    char e[] = "create  foo  { int n  -primarykey, int  ctr -autoinc,  double x  -default(3.14), string txt }";
+    printf("%s", execute(e, db));
+
+    char f[] = "insert foo { (txt: \"this is fun\") (txt: \"boba\", x:5.56, ctr: 8) (txt:\"asdf\")(txt:\"asdf\")(txt:\"asdf\")(txt:\"asdf\")(txt:\"asdf\")(txt:\"asdf\")(txt:\"asdf\")(txt:\"asdf\")(txt:\"asdf\")(txt:\"asdf\") }";
+    printf("%s", execute(f, db));
+
+    char g[] = "read foo all";
+    printf("%s", execute(g, db));
+
+    return 0;
+}
