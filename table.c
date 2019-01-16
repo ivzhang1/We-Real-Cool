@@ -70,6 +70,21 @@ int hs(char *str){
     return 0;
 }
 
+void set_val(struct table *t, int row, int col, int type, int tag, char *new_val){
+    union value *val;
+    if (row == -1)
+        val = t->defaults + col;
+    else
+        val = get(t->al, row)->values + col;
+
+    if (type == INT)
+        val->integer = atoi(new_val);
+    else if (type == DOUBLE)
+        val->decimal = atof(new_val);
+    else if (type == STRING)
+        val->string = new_val;
+}
+
 struct table *get_table(char *tname, struct database *db){
   for (int i = 0; i < db->num_tables; i ++)
       if ( !strcmp(db->tables[i].name, tname) )
@@ -105,12 +120,7 @@ char *set_tag(struct table *t, int j, char *tag){
         t->tags[j] = DEFAULT;
         strsep(&tag, "(");
         char *val = rs( strsep(&tag, ")") );
-        if (t->types[j] == INT)
-            t->defaults[j].integer = atoi(val);
-        else if (t->types[j] == DOUBLE)
-            t->defaults[j].decimal = atof(val);
-        else if (t->types[j] == STRING)
-            t->defaults[j].string = val;
+        set_val(t, -1, j, t->types[j], 0, val);
     }
     free(s);
     return 0;
@@ -436,8 +446,7 @@ char *delete(char *str, struct database *db){
         strcpy(s, "invalid syntax\n");
         return s;
     }
-    str += 6;
-    str = rs(str);
+    str = rs(str + 6);
     char **piece = calloc(strlen(str), sizeof(char *));
     // piece[0] = expr;
 
@@ -515,22 +524,78 @@ char *sort(char *str, struct database *db){
 }
 
 char *update(char *str, struct database *db){
+
     char *s = malloc(BUFFER_SIZE);
     str = rs(str);
+
     // printf("%s\n", db->tables[0].name);
     // print_table(&(db->tables[0]));
-    char *tname = rs( strsep(&str, "{") );
+    char *tname = rs( strsep(&str, ".") );
     struct table *t = get_table(tname, db);
     if (!t){
         strcpy(s, "table does not exist\n");
         return s;
     }
+    char *col = strsep(&str, " ");
+    int j = index_of(t, col);
+    if (j == -1){
+        strcpy(s, "column does not exist\n");
+        return s;
+    }
+    str = rs(str);
+    if (strncmp(str, "to ", 3)){
+        strcpy(s, "missing keyword 'to'\n");
+        return s;
+    }
+    str = rs(str + 3);
+    char *val = strsep(&str, " ");
+    if (t->types[j] == STRING){
+        val = rq(val);
+        if (!val){
+            strcpy(s, "need quotes around strings\n");
+            return s;
+        }
+    }
+    str = rs(str);
+    int *read;
+    if (!str){
+        read = calloc(t->al->num_rows, sizeof(int));
+        for (int i = 0; i < t->al->num_rows; i ++)
+            read[i] = 1;
+    }
+    else {
+        if ( strncmp(str, "where ", 6) ){
+            strcpy(s, "invalid syntax\n");
+            return s;
+        }
+        str = rs(str + 6);
+        char **piece = calloc(strlen(str), sizeof(char *));
+        // piece[0] = expr;
+
+        int ctr = 0;
+        // printf("[%s]\n", expr);
+        while (piece[ctr] = strsep(&str, "|")){
+            piece[ctr] = rs(piece[ctr]);
+            ctr ++;
+        }
+        read = bool_or(t, piece, ctr);
+        free(piece);
+    }
+    struct row *r;
+    // printf("[%s]\n", val);
+    for (int i = 0; i < t->al->num_rows; i ++){
+        if (read[i]){
+            set_val(t, i, j, t->types[j], 0, val);
+        }
+    }
+    free(s);
     return 0;
 }
 
 char *execute(char *str, struct database *db){
     char *s;
     str = rs(str);
+
     if (!strncmp(str, "create ", 7))
         s = create_table(str + 7, db);
     else if (!strncmp(str, "read ", 5))
@@ -582,6 +647,12 @@ int main(){
 
     char g[] = "read foo all";
     printf("%s", execute(g, db));
+
+    char h[] = "update foo.txt to \"lmao\" where x = 3.14 & ctr = 9";
+    printf("%s", execute(h, db));
+
+    char i[] = "read foo all";
+    printf("%s", execute(i, db));
 
     return 0;
 }

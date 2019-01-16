@@ -51,6 +51,8 @@ char *rq(char *str);
 
 int hs(char *str);
 
+void set_val(struct table *t, int row, int col, int type, int tag, char *new_val);
+
 struct table *get_table(char *tname, struct database *db);
 
 void initialize(struct table *t, int i);
