@@ -7,12 +7,16 @@
 #include <stdlib.h>
 #include "client.h"
 #include "commons.h"
+#include "login.h"
 
 int main(int argc, char * argv[]) {
     check_input(argc, 2, "./client <ip> <port>");
     char *ip = argv[1];
     char *port = argv[2];
     int db_sd = connect_to_db(ip, port);
+
+    while(log_or_reg());
+    
     while (1) {
         query(db_sd); // do stuff!
         close(db_sd);

@@ -4,6 +4,7 @@
 #include <unistd.h>
 #include <termios.h>
 
+#include "login.h"
 
 char* my_getpass (char *line, int n, FILE *stream)
 {
@@ -27,7 +28,7 @@ char* my_getpass (char *line, int n, FILE *stream)
     return nread;
 }
 
-void login(){
+int login(){
   fflush(stdin);
 
   char student_name[256];
@@ -42,10 +43,11 @@ void login(){
 
   *(student_name + strlen(student_name) - 1) = '\0';
   *(pass + strlen(pass) - 1) = '\0';
-  
+
+  return 0;
 }
 
-void registerr(){
+int registerr(){
   char student_name[256];
   char pass[256];
   char confirm_pass[256];
@@ -87,10 +89,11 @@ void registerr(){
   *(confirm_pass + strlen(confirm_pass) - 1) = '\0';
 
   printf("Success: %s, %s, %s\n", student_name, pass, confirm_pass);
-  
+
+  return 0;
 }
 
-void log_or_reg(){
+int log_or_reg(){
   char input[256];
   
   printf("Do you have an account (y/n): ");
@@ -104,16 +107,11 @@ void log_or_reg(){
 
   
   if (!strncmp(input, "y", 1)){
-    login();
+    return login();
   }
   else{
-    registerr();
+    return registerr();
   }
 
   
-}
-
-int main(){
-  log_or_reg();
-  return 0;
 }
