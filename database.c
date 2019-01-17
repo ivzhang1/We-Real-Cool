@@ -6,9 +6,7 @@ int main(int argc, char * argv[]) {
     int listening_sd = server_setup(port);
     int sem_id = sem_setup();
 
-    struct database *db = malloc( sizeof(struct database) );
-    db->tables = calloc(10, sizeof(struct table));
-    db->num_tables = 0;
+    struct database *db = db_setup();
 
     while (1) {
         int client_sd = get_client(listening_sd);
@@ -24,7 +22,7 @@ int main(int argc, char * argv[]) {
 }
 
 int sem_setup() {
-    int sem_id = error_check("creating semaphore", semget(KEY, 1, IPC_CREAT | 0644));
+    int sem_id = error_check("creating semaphore", semget(SEM_KEY, 1, IPC_CREAT | 0644));
     union semun ctl = {.val = 1};
     semctl(sem_id, 0, SETVAL, ctl);
     return sem_id;
@@ -69,14 +67,16 @@ void fulfill(int client_sd, int sem_id, struct database *db) {
     sbuf->sem_num = 0;
     sbuf->sem_flg = SEM_UNDO;
     semop(sem_id, sbuf, 1);
-    char *piece, *response_buf;
-    printf("[%s]\n", query_buf);
+    char *piece;
+    char *response_buf = malloc(BUFFER_SIZE);
+    response_buf[0] = 0;
 
+    // query_buf[ strlen(query_buf) - 1 ] = 0;
     while (piece = strsep(&query_buf, ";\n")){
-        response_buf = process(piece, db);
-        error_check("responding", (int) send(client_sd, response_buf, BUFFER_SIZE, 0));
+        printf("[%s]\n", piece);
+        strcat(response_buf, process(piece, db));
     }
-
+    error_check("responding", (int) send(client_sd, response_buf, BUFFER_SIZE, 0));
     sbuf->sem_op = 1;
     semop(sem_id, sbuf, 1);
     free(sbuf);

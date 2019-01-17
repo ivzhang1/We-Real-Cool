@@ -9,7 +9,6 @@
 #include "al.h"
 #include "qs.h"
 
-#define SEG_SIZE 0xffff
 #define BUFFER_SIZE 1024
 #define DATA_SIZE 256
 
@@ -23,10 +22,6 @@
 #define PRIMARY_KEY 1
 #define AUTO_INC 2
 #define DEFAULT 3
-
-#define GREATER 1
-#define EQUAL 0
-#define LESS -1
 
 struct table {
     char name[DATA_SIZE];
@@ -42,6 +37,8 @@ struct database {
     struct table *tables;
     int num_tables;
 };
+
+struct database *db_setup();
 
 char *str_row(struct table *t, int index);
 

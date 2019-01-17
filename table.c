@@ -1,5 +1,12 @@
 #include "table.h"
 
+struct database *db_setup(){
+    struct database *db = malloc(sizeof(struct database));
+    db->tables = calloc(10, sizeof(struct table));
+    db->num_tables = 0;
+    return db;
+}
+
 char *str_row(struct table *t, int index){
     char *s = malloc(BUFFER_SIZE);
     char *d = s;
@@ -223,6 +230,7 @@ int evaluate(struct table *t, int row, int col0, int col1, int type0, int type1,
     // int read = calloc(t->al->num_rows, sizeof(int));
     union value *target0 = get(t->al, row)->values + col0;
     union value *target1;
+    // printf("[%s]\n", val);
     if (col1 == -1){
         if (type0 == INT){
             if (!sign)
@@ -237,9 +245,6 @@ int evaluate(struct table *t, int row, int col0, int col1, int type0, int type1,
                 return (target0->decimal - atof(val)) / sign >= 0;
         }
         else if (type0 == STRING){
-            val = rq(val);
-            if (!val)
-                return 0;
             if (!sign)
                 return strcmp(target0->string, val);
             else
@@ -319,7 +324,11 @@ int *bool_and(struct table *t, char **piece, int c){
                 for (int r = 0; r < t->al->num_rows; r ++)
                     read[r] += val;
             }
+
             else {
+                temp = rq(col1);
+                if (temp)
+                    col1 = temp;
                 for (int r = 0; r < t->al->num_rows; r ++){
                     val = evaluate(t, r, index0, -1, t->types[index0], -1, sign, col1);
                     if (val == -1)

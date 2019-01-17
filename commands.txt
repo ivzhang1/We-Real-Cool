@@ -1,3 +1,6 @@
  create  oof  {  int   i  ,  double    d   ,  string   s  }
  insert    oof  { (   i:5, d:91.7  , s:"smd" )(d:2.718 , i:1024 ,   s:"xD" )  (d:5, s:"oof", i:6 )(  i:3 ,d: 6.9 ,s : "lmao" ) (   i:5, d:3.14  ,s  : "UwU" )  }
  read   oof   all
+create  foo  { int n  -primarykey, int  ctr -autoinc,  double x  -default(3.14), string txt }
+insert foo { (txt: "this is fun") (txt: "boba", x:5.56, ctr: 8) (txt:"asdf") }
+read foo all
