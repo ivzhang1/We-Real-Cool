@@ -39,14 +39,19 @@ void get_results(char *ip, char *port, struct addrinfo **results_list) {
     }
 }
 
+int empty_string(char *string) {
+    for (; *string == ' '; string++);
+    return *string == 0;
+}
+
 char *next_word(char **string) {
     for (; **string != ' '; (*string)++);
     return strsep(string, " ");
 }
 
-unsigned char is_alpha(char *str) {
+int is_alpha(char *str) {
     for (; *str && ((('a' <= *str) && (*str <= 'z')) || (('A' <= *str) && (*str <= 'Z'))); str++);
-    return (unsigned char) (*str == 0);
+    return *str == 0;
 }
 
 char *multichar_strsep(char **string, char *delim) {

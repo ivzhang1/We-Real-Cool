@@ -14,7 +14,7 @@ create <tablename> {
     ...
 };
 ```
-types: `int`, `double`, `string(<len>)`
+types: `int`, `double`, `string`
 
 tags: `-primarykey`, `-autoinc`, `-foreignkey(<tablename>.<colname>)`, `default(<value>)`
 

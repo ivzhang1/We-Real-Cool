@@ -14,7 +14,7 @@ int main(int argc, char * argv[]) {
     char *port = argv[1];
     int listening_sd = server_setup(port);
     // create semaphore
-    int sem_id = error_check("creating semaphore", semget(KEY, 1, IPC_CREAT | 0644));
+    int sem_id = sem_setup();
     // create database
     struct table *db = NULL;
     // converse
@@ -76,7 +76,7 @@ void fulfill(int client_sd, int sem_id, struct table *db) {
     sbuf->sem_num = 0;
     sbuf->sem_flg = SEM_UNDO;
     semop(sem_id, sbuf, 1);
-    char *response_buf = process(query_buf, sem_id);
+    char *response_buf = process(query_buf, sem_id, db);
     sbuf->sem_op = 1;
     semop(sem_id, sbuf, 1);
     free(sbuf);
@@ -110,9 +110,9 @@ char *process(char *query, int sem_id, struct table *db) {
 
 void create(char *query, int sem_id, struct table *db) {
     char *name = next_word(&query);
-    if (!is_alpha(name)) printf("invalid table name\n");
+    if (!is_alpha(name)) printf("invalid table name\n"); // todo quit on printf
     struct table *t = malloc(sizeof(struct table));
-    strcat(t->name, "table_");
+    strcat(t->name, "table_"); // todo adjust size
     strcat(t->name, name);
     t->columns = NULL;
     init_columns(query, t);
@@ -122,27 +122,25 @@ void create(char *query, int sem_id, struct table *db) {
 void init_columns(char *query, struct table *t) {
     // make sure there was nothing invalid before '{'
     char *prev = strsep(&query, "{");
-    for (; *prev == ' '; prev++);
-    if (*prev) printf("invalid syntax\n");
+    if (!empty_string(prev)) printf("invalid syntax before {\n"); // todo quit on printf
     // strip end
-    query = strsep(&query, "}");
+    char *after = query;
+    query = strsep(&after, "}");
+    if (!empty_string(prev)) printf("invalid syntax after }\n"); // todo quit on printf
     // iterate by commas
     char *header;
-    while ((header = strsep(&query, ","))) {
+    for (int i = 0; (header = strsep(&query, ",")); i++) {
         // create column
         struct column *col = malloc(sizeof(struct column));
         // set type
         char *type_str = next_word(&header);
-        unsigned char type = (unsigned char) -1;
-        int str_len;
+        unsigned char type;
         if (!strcmp(type_str, "int"))type = INT;
         else if (!strcmp(type_str, "double")) type = DBL;
-        else if (!strncmp(type_str, "string", 6)) {
-            type = STR;
-            // parse size of string
-            str_len = DATA_SIZE; // todo: fix that
-        } else printf("invalid type");
+        else if (!strcmp(type_str, "string")) type = STR;
+        else printf("invalid type column %d\n", i); // todo quit on printf
         col->type = type;
+        // set flags
 
     }
 }
