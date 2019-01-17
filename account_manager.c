@@ -60,7 +60,7 @@ int create_account(){
   int shmid;
   struct account *accounts;
 
-  key = ftok("account_manager.c", 'R');
+  key = 1062;
   shmid = shmget(key, 256 * sizeof(struct account), 0644);
   accounts = (struct account *)shmat(shmid, NULL, 0);
 
