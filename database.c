@@ -5,11 +5,14 @@ int main(int argc, char * argv[]) {
     char *port = argv[1];
     int listening_sd = server_setup(port);
     int sem_id = sem_setup();
+    int from_subserver, to_server;
 
     struct database *db = db_setup();
 
     while (1) {
         int client_sd = get_client(listening_sd);
+        mkfifo("wkp", 0644);
+        from_subserver = open("wkp", O_RDONLY);
         if (!fork()) { // child
             close(listening_sd);
             while(1)
