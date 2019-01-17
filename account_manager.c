@@ -1,12 +1,3 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-#include <termios.h>
-#include <sys/ipc.h>
-#include <sys/shm.h>
-#include <string.h>
-
 #include "account_manager.h"
 
 char* my_getpass (char *line, int n, FILE *stream){
@@ -73,6 +64,8 @@ int create_account(){
   shmid = shmget(key, 256 * sizeof(struct account), 0644);
   accounts = (struct account *)shmat(shmid, NULL, 0);
 
+  error_check("Opening shared memory", shmid);
+  
   if(shmid!=-1){
     printf("shared contents\n");
     int i = 0;
@@ -99,7 +92,7 @@ int create_account(){
   return 0;
 }
 
-void delete_account(){
+int delete_account(){
   char student_name[256];
   
   printf("Student Name: ");
@@ -114,6 +107,7 @@ void delete_account(){
   shmid = shmget(key, 256 * sizeof(struct account), 0644);
   accounts = (struct account *)shmat(shmid, NULL, 0);
 
+  
   if(shmid!=-1){
     printf("shared contents\n");
     int i = 0;
@@ -122,8 +116,8 @@ void delete_account(){
     }
 
     if(strcmp(accounts[i].username, student_name)){
-      accounts[i].username = NULL;
-      accounts[i].password = NULL;
+      strcpy(accounts[i].username, "\0");
+      strcpy(accounts[i].password, "\0");
     }
   }
   else{
@@ -135,7 +129,6 @@ void delete_account(){
   printf("Account Successfully Deleted: %s\n", student_name);
 
   return 0;
-}
 }
 
 int main(){
