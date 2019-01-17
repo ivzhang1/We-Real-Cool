@@ -61,9 +61,9 @@ int create_account(){
     my_getpass(confirm_pass, 256, stdin);
 
   }
-  *(student_name + strlen(student_name)) = '\0';
-  *(pass + strlen(pass)) = '\0';
-  *(confirm_pass + strlen(confirm_pass)) = '\0';
+  *(student_name + strlen(student_name)-1) = '\0';
+  *(pass + strlen(pass)-1) = '\0';
+  *(confirm_pass + strlen(confirm_pass)-1) = '\0';
 
   key_t key;
   int shmid;
