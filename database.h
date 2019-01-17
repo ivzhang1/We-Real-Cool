@@ -18,11 +18,11 @@ int get_client(int listening_sd);
 
 void fulfill(int client_sd, int sem_id, struct table *db);
 
-char *process(char *query, int sem_id, struct table *db);
+char *process(char *query, struct table *db);
 
-void create(char *query, int sem_id, struct table *db);
+char *create(char *query, struct table *db);
 
-void init_columns(char *query, struct table *t);
+char *init_columns(char *query, struct table *t);
 
 
 #endif //FINAL_DATABASE_H

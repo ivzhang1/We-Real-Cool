@@ -39,7 +39,7 @@ int sem_setup() {
 int server_setup(char *port) {
     struct addrinfo *results, *p;
     get_results(NULL, port, &results);
-    int listening_sd;
+    int listening_sd = -1;
     for (p = results; p != NULL; p = p->ai_next) {
         if ((listening_sd = socket(p->ai_family, p->ai_socktype, p->ai_protocol)) == -1)
             continue;
@@ -76,7 +76,7 @@ void fulfill(int client_sd, int sem_id, struct table *db) {
     sbuf->sem_num = 0;
     sbuf->sem_flg = SEM_UNDO;
     semop(sem_id, sbuf, 1);
-    char *response_buf = process(query_buf, sem_id, db);
+    char *response_buf = process(query_buf, db);
     sbuf->sem_op = 1;
     semop(sem_id, sbuf, 1);
     free(sbuf);
@@ -84,13 +84,14 @@ void fulfill(int client_sd, int sem_id, struct table *db) {
     free(response_buf);
 }
 
-char *process(char *query, int sem_id, struct table *db) {
+char *process(char *query, struct table *db) {
     char *response = calloc(BUFFER_SIZE, sizeof(char));
     char *command;
     while ((command = strsep(&query, ";"))) {
         char *action = next_word(&command);
         if (!strcmp(action, "create")) {
-            create(command, sem_id, db);
+            char *fail = create(command, db);
+            if (fail) return throw_error(fail);
         } else if (!strcmp(action, "insert")) {
 
         } else if (!strcmp(action, "read")) {
@@ -108,25 +109,27 @@ char *process(char *query, int sem_id, struct table *db) {
     return response;
 }
 
-void create(char *query, int sem_id, struct table *db) {
+char *create(char *query, struct table *db) {
     char *name = next_word(&query);
-    if (!is_alpha(name)) printf("invalid table name\n"); // todo quit on printf
+    if (!is_alpha(name)) return throw_error("invalid table name\n");
     struct table *t = malloc(sizeof(struct table));
-    strcat(t->name, "table_"); // todo adjust size
+    strcat(t->name, "table_");
     strcat(t->name, name);
     t->columns = NULL;
-    init_columns(query, t);
-    HASH_ADD_KEYPTR(hh, db, t->name, strlen(t->name), t);
+    char *fail = init_columns(query, t);
+    if (fail) return throw_error(fail);
+    HASH_ADD_STR(db, name, t);
+    return NULL;
 }
 
-void init_columns(char *query, struct table *t) {
+char *init_columns(char *query, struct table *t) {
     // make sure there was nothing invalid before '{'
     char *prev = strsep(&query, "{");
-    if (!empty_string(prev)) printf("invalid syntax before {\n"); // todo quit on printf
+    if (!empty_string(prev)) return throw_error("invalid syntax before {\n");
     // strip end
     char *after = query;
     query = strsep(&after, "}");
-    if (!empty_string(prev)) printf("invalid syntax after }\n"); // todo quit on printf
+    if (!empty_string(prev)) return throw_error("invalid syntax after }\n");
     // iterate by commas
     char *header;
     for (int i = 0; (header = strsep(&query, ",")); i++) {
@@ -138,9 +141,15 @@ void init_columns(char *query, struct table *t) {
         if (!strcmp(type_str, "int"))type = INT;
         else if (!strcmp(type_str, "double")) type = DBL;
         else if (!strcmp(type_str, "string")) type = STR;
-        else printf("invalid type column %d\n", i); // todo quit on printf
+        else {
+            char *err = calloc(100, sizeof(char));
+            sprintf(err, "invalid type, column %d\n", i);
+            return err;
+        }
         col->type = type;
-        // set flags
+        // set tags
+        col->tags = 0; // todo: parse tags
 
     }
+    return NULL;
 }

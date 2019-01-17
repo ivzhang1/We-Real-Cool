@@ -26,4 +26,6 @@ char *multichar_strsep(char **string, char *delim);
 
 int is_alpha(char *str);
 
+char *throw_error(char *err);
+
 #endif //FINAL_COMMONS_H

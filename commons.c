@@ -63,3 +63,9 @@ char *multichar_strsep(char **string, char *delim) {
     *string = p;
     return temp;
 }
+
+char *throw_error(char *err) {
+    char *p = calloc(strlen(err), sizeof(char));
+    strcpy(p, err);
+    return p;
+}
