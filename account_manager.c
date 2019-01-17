@@ -75,18 +75,19 @@ int create_account(){
 
   if(shmid!=-1){
     printf("shared contents\n");
-    while(accounts){
-      printf("1");
-      accounts++;
+    int i = 0;
+    while(accounts[i].username){
+      i++;
     }
-    strcpy(accounts->username, student_name);
-    strcpy(accounts->password, pass);
+    strcpy(accounts[i].username, student_name);
+    strcpy(accounts[i].password, pass);
   }
   else{
     shmid = shmget(key, 256 * sizeof(struct account), 0644);
     accounts = (struct account *)shmat(shmid, NULL, 0);
     accounts = calloc(256, sizeof(struct account));
-    strcpy(accounts->username, student_name);
+    strcpy(accounts[0].username, student_name);
+    strcpy(accounts[0].password, pass);
     
     printf("shared memory just created! Chill!\n");
   }
@@ -99,7 +100,42 @@ int create_account(){
 }
 
 void delete_account(){
+  char student_name[256];
+  
+  printf("Student Name: ");
+  fgets(student_name, 256, stdin);
+  *(student_name + strlen(student_name)-1) = '\0';
 
+  key_t key;
+  int shmid;
+  struct account *accounts;
+
+  key = ftok("account_manager.c", 'R');
+  shmid = shmget(key, 256 * sizeof(struct account), 0644);
+  accounts = (struct account *)shmat(shmid, NULL, 0);
+
+  if(shmid!=-1){
+    printf("shared contents\n");
+    int i = 0;
+    while(i < 256 || !strcmp(accounts[i].username, student_name)){
+      i++;
+    }
+
+    if(strcmp(accounts[i].username, student_name)){
+      accounts[i].username = NULL;
+      accounts[i].password = NULL;
+    }
+  }
+  else{
+    printf("No Accounts Exist!\n");
+  }
+
+
+  
+  printf("Account Successfully Deleted: %s\n", student_name);
+
+  return 0;
+}
 }
 
 int main(){
