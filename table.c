@@ -209,11 +209,11 @@ int index_of(struct table *t, char *col){
 int get_sign(char *piece){
     while (*piece){
         if (!strncmp(piece, ">", 1))
-            return GREATER;
+            return -1;
         else if (!strncmp(piece, "=", 1))
-            return EQUAL;
+            return 0;
         else if (!strncmp(piece, "<", 1))
-            return LESS;
+            return 1;
         piece ++;
     }
     return 2;
@@ -228,19 +228,22 @@ int evaluate(struct table *t, int row, int col0, int col1, int type0, int type1,
             if (!sign)
                 return target0->integer != atoi(val);
             else
-                return (target0->integer - atoi(val)) / sign < 0;
+                return (target0->integer - atoi(val)) / sign >= 0;
         }
         else if (type0 == DOUBLE){
             if (!sign)
                 return target0->decimal != atof(val);
             else
-                return (target0->decimal - atof(val)) / sign < 0;
+                return (target0->decimal - atof(val)) / sign >= 0;
         }
         else if (type0 == STRING){
+            val = rq(val);
+            if (!val)
+                return 0;
             if (!sign)
                 return strcmp(target0->string, val);
             else
-                return strcmp(target0->string, val) / sign < 0;
+                return strcmp(target0->string, val) / sign >= 0;
         }
 
     }
@@ -252,13 +255,13 @@ int evaluate(struct table *t, int row, int col0, int col1, int type0, int type1,
                 if (!sign)
                     return target0->integer != target1->integer;
                 else
-                    return (target0->integer - target1->integer) / sign < 0;
+                    return (target0->integer - target1->integer) / sign >= 0;
             }
             else if (type1 == DOUBLE){
                 if (!sign)
                     return target0->integer != target1->decimal;
                 else
-                    return (target0->integer - target1->decimal) / sign < 0;
+                    return (target0->integer - target1->decimal) / sign >= 0;
             }
             else
                 return -1;
@@ -268,13 +271,13 @@ int evaluate(struct table *t, int row, int col0, int col1, int type0, int type1,
                 if (!sign)
                     return target0->decimal != target1->integer;
                 else
-                    return (target0->decimal - target1->integer) / sign < 0;
+                    return (target0->decimal - target1->integer) / sign >= 0;
             }
             else if (type1 == DOUBLE){
                 if (!sign)
                     return target0->decimal != target1->decimal;
                 else
-                    return (target0->decimal - target1->decimal) / sign < 0;
+                    return (target0->decimal - target1->decimal) / sign >= 0;
             }
             else
                 return -1;
@@ -284,7 +287,7 @@ int evaluate(struct table *t, int row, int col0, int col1, int type0, int type1,
                 if (!sign)
                     return strcmp(target0->string, target1->string);
                 else
-                    return strcmp(target0->string, target1->string) / sign < 0;
+                    return strcmp(target0->string, target1->string) / sign >= 0;
             }
             else
                 return -1;
@@ -318,7 +321,7 @@ int *bool_and(struct table *t, char **piece, int c){
             }
             else {
                 for (int r = 0; r < t->al->num_rows; r ++){
-                    val = evaluate(t, r, index0, 0, t->types[index0], 0, sign, col1);
+                    val = evaluate(t, r, index0, -1, t->types[index0], -1, sign, col1);
                     if (val == -1)
                         return 0;
                     read[r] += val;
@@ -383,7 +386,7 @@ char *read_spec(struct table *t, char *expr){
     // printf("%d\n", ctr);
     int *read = bool_or(t, piece, ctr);
     if (!read){
-        strcpy(s, "syntax error");
+        strcpy(s, "read failed: syntax error\n");
         return s;
     }
     free(piece);
@@ -706,38 +709,38 @@ char *execute(char *str, struct database *db){
     return s;
 }
 
-int main(){
-    // int shm_id = shmget(KEY, SEG_SIZE, IPC_CREAT | 0644);
-    struct database *db = malloc( sizeof(struct database) );
-    db->tables = calloc(10, sizeof(struct table));
-    db->num_tables = 0;
-    char a[] = "   create  oof  {  int   i  ,  double    d   ,  string   s  } ";
-    printf("%s", execute(a, db));
-
-    char b[] = "  insert    oof  { (   i:5, d:91.7  , s:\"smd\" )(d:2.718 , i:1024 ,   s:\"xD\" )  (d:5, s:\"oof\", i:6 )(  i:3 ,d: 6.9 ,s : \"lmao\" ) (   i:5, d:3.14  ,s  : \"UwU\" )  }";
-    printf("%s", execute(b, db));
-
-    //
-    char c[] = " read   oof   all where i = 5";
-    printf("%s", execute(c, db));
-
-    char d[] = "  sort  oof by  d ";
-    printf("%s", execute(d, db));
-
-    char e[] = "create  foo  { int n  -primarykey, int  ctr -autoinc,  double x  -default(3.14), string txt }";
-    printf("%s", execute(e, db));
-
-    char f[] = "insert foo { (txt: \"this is fun\") (txt: \"boba\", x:5.56, ctr: 8) (txt:\"asdf\")(txt:\"asdf\")(txt:\"asdf\")(txt:\"asdf\")(txt:\"asdf\")(txt:\"asdf\")(txt:\"asdf\")(txt:\"asdf\")(txt:\"asdf\")(txt:\"asdf\") }";
-    printf("%s", execute(f, db));
-
-    char g[] = "read foo all";
-    printf("%s", execute(g, db));
-
-    char h[] = "update foo.txt to \"lmao\" where x = 3.14 & ctr = 9";
-    printf("%s", execute(h, db));
-
-    char i[] = "read foo all";
-    printf("%s", execute(i, db));
-
-    return 0;
-}
+// int main(){
+//     // int shm_id = shmget(KEY, SEG_SIZE, IPC_CREAT | 0644);
+//     struct database *db = malloc( sizeof(struct database) );
+//     db->tables = calloc(10, sizeof(struct table));
+//     db->num_tables = 0;
+//     char a[] = "   create  oof  {  int   i  ,  double    d   ,  string   s  } ";
+//     printf("%s", execute(a, db));
+//
+//     char b[] = "  insert    oof  { (   i:5, d:91.7  , s:\"smd\" )(d:2.718 , i:1024 ,   s:\"xD\" )  (d:5, s:\"oof\", i:6 )(  i:3 ,d: 6.9 ,s : \"lmao\" ) (   i:5, d:3.14  ,s  : \"UwU\" )  }";
+//     printf("%s", execute(b, db));
+//
+//     //
+//     char c[] = " read   oof   all where d > ";
+//     printf("%s", execute(c, db));
+//
+//     char d[] = "  sort  oof by  d ";
+//     printf("%s", execute(d, db));
+//
+//     char e[] = "create  foo  { int n  -primarykey, int  ctr -autoinc,  double x  -default(3.14), string txt }";
+//     printf("%s", execute(e, db));
+//
+//     char f[] = "insert foo { (txt: \"this is fun\") (txt: \"boba\", x:5.56, ctr: 8) (txt:\"asdf\")(txt:\"asdf\")(txt:\"asdf\")(txt:\"asdf\")(txt:\"asdf\")(txt:\"asdf\")(txt:\"asdf\")(txt:\"asdf\")(txt:\"asdf\")(txt:\"asdf\") }";
+//     printf("%s", execute(f, db));
+//
+//     char g[] = "read foo all";
+//     printf("%s", execute(g, db));
+//
+//     char h[] = "update foo.txt to \"lmao\" where x = 3.14 & ctr = 9";
+//     printf("%s", execute(h, db));
+//
+//     char i[] = "read foo all where ctr > n";
+//     printf("%s", execute(i, db));
+//
+//     return 0;
+// }

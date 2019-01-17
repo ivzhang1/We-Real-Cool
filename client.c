@@ -10,8 +10,9 @@ int main(int argc, char * argv[]) {
         printf("%s\n", response_buf);
         free(response_buf);
         close(db_sd);
-        return 0;
     }
+    return 0;
+    
 }
 
 int connect_to_db(char *ip, char *port) {
