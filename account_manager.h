@@ -5,13 +5,13 @@
 #include <termios.h>
 
 struct account{
-  char *username;
-  char *password;
-}
+  char username[256];
+  char password[256];
+};
 
-  char* my_getpass (char *line, int n, FILE *stream)
+char* my_getpass (char *line, int n, FILE *stream);
 
 int create_account();
 
-int delete_account();
+void delete_account();
 
