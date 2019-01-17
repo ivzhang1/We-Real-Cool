@@ -14,7 +14,7 @@ int main(int argc, char * argv[]) {
         int client_sd = get_client(listening_sd);
         if (!fork()) { // child
             close(listening_sd);
-            while (1)
+            while(1)
                 fulfill(client_sd, sem_id, db); // do stuff!
             close(client_sd);
             exit(0);
@@ -70,9 +70,9 @@ void fulfill(int client_sd, int sem_id, struct database *db) {
     sbuf->sem_flg = SEM_UNDO;
     semop(sem_id, sbuf, 1);
     char *piece, *response_buf;
-    // printf("[%s]\n", query_buf);
+    printf("[%s]\n", query_buf);
 
-    while (piece = strsep(&query_buf, ";")){
+    while (piece = strsep(&query_buf, ";\n")){
         response_buf = process(piece, db);
         error_check("responding", (int) send(client_sd, response_buf, BUFFER_SIZE, 0));
     }

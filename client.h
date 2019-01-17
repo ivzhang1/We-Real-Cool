@@ -7,6 +7,7 @@
 #include <stdlib.h>
 
 #include "commons.h"
+#include "table.h"
 
 int connect_to_db(char *ip, char *port);
 

@@ -1,0 +1,3 @@
+ create  oof  {  int   i  ,  double    d   ,  string   s  }
+ insert    oof  { (   i:5, d:91.7  , s:"smd" )(d:2.718 , i:1024 ,   s:"xD" )  (d:5, s:"oof", i:6 )(  i:3 ,d: 6.9 ,s : "lmao" ) (   i:5, d:3.14  ,s  : "UwU" )  }
+ read   oof   all
