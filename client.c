@@ -13,8 +13,6 @@ int main(int argc, char * argv[]) {
         char *response_buf = query(db_sd);
         printf("%s\n", response_buf);
         free(response_buf);
-        close(db_sd);
-        return 0;
     }
 }
 
