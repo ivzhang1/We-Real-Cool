@@ -9,7 +9,6 @@
 #include "al.h"
 #include "qs.h"
 
-#define SEG_SIZE 0xffff
 #define BUFFER_SIZE 1024
 #define DATA_SIZE 256
 
@@ -39,6 +38,8 @@ struct database {
     int num_tables;
 };
 
+struct database *db_setup();
+
 char *str_row(struct table *t, int index);
 
 char *str_table(struct table *t, int *read);
@@ -49,7 +50,8 @@ char *rs(char *str);
 //removes quotation marks
 char *rq(char *str);
 
-int hs(char *str);
+
+void set_val(struct table *t, int row, int col, int type, int tag, char *new_val);
 
 struct table *get_table(char *tname, struct database *db);
 

@@ -5,27 +5,27 @@ void swap(struct array_list *al, int a, int b){
 }
 
 int partition(struct array_list *al, int lo, int hi, int col, int type){
-    union value v = get(al, lo).values[col];
+    union value v = get(al, lo)->values[col];
     swap(al, lo, hi);
     int s = lo;
 
     if (type == INT){
         for (int i = lo; i < hi; i ++)
-            if (get(al, i).values[col].integer < v.integer){
+            if (get(al, i)->values[col].integer < v.integer){
                 swap(al, i, s);
                 s ++;
             }
     }
     else if (type == DOUBLE){
         for (int i = lo; i < hi; i ++)
-            if (get(al, i).values[col].decimal < v.decimal){
+            if (get(al, i)->values[col].decimal < v.decimal){
                 swap(al, i, s);
                 s ++;
             }
     }
     else if (type == STRING){
         for (int i = lo; i < hi; i ++)
-            if ( strcmp(get(al, i).values[col].string, v.string) < 0){
+            if ( strcmp(get(al, i)->values[col].string, v.string) < 0){
                 swap(al, i, s);
                 s ++;
             }

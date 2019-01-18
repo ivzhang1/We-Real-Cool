@@ -10,6 +10,7 @@ int main(int argc, char * argv[]) {
         printf("%s\n", response_buf);
         free(response_buf);
     }
+    return 0;
 }
 
 int connect_to_db(char *ip, char *port) {
@@ -48,8 +49,8 @@ char *get_query() {
     prompt("Enter query: ", query_buf);
     // check if loading from file
     if (!strncmp(query_buf, "source", 6)) {
-        int fd = error_check("loading file", open(&(query_buf[7]), O_RDONLY));
-        query_buf[read(fd, query_buf, BUFFER_SIZE)] = '\0';
+        int fd = error_check("loading file", open(query_buf + 7, O_RDONLY));
+        query_buf[read(fd, query_buf, BUFFER_SIZE) - 1] = '\0';
     }
     return query_buf;
 }

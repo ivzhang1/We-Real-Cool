@@ -57,6 +57,10 @@ williamL -- 2019-1-15 17:00
 --------------------------------------------------------------
 All printing statements are now strings returned that can be sent to clients
 ==============================================================
+williamL -- 2019-1-17 21:50
+--------------------------------------------------------------
+Removed forking in server so data can be stored in ram
+================================================================
 williamL -- 2019-1-16 9:30
 --------------------------------------------------------------
 al.c now has struct row **rows instead of struct row *row
