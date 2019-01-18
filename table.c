@@ -13,11 +13,11 @@ char *str_row(struct table *t, int index){
     d += sprintf(d, "| ");
     for (int i = 0; i < t->num_columns; i ++)
         if (t->types[i] == INT)
-            d += sprintf(d, "[%d] | ", get(t->al, index)->values[i].integer);
+            d += sprintf(d, "%d | ", get(t->al, index)->values[i].integer);
         else if (t->types[i] == DOUBLE)
-            d += sprintf(d, "[%lf] | ", get(t->al, index)->values[i].decimal);
+            d += sprintf(d, "%lf | ", get(t->al, index)->values[i].decimal);
         else if (t->types[i] == STRING)
-            d += sprintf(d, "[%s] | ", get(t->al, index)->values[i].string);
+            d += sprintf(d, "%s | ", get(t->al, index)->values[i].string);
     d += sprintf(d, "\n");
     return s;
 }
@@ -27,7 +27,7 @@ char *str_table(struct table *t, int *read){
     char *d = s;
     d += sprintf(d, "| ");
     for (int i = 0; i < t->num_columns; i ++)
-        d += sprintf(d, "[%s] | ", t->col_names[i]);
+        d += sprintf(d, "%s | ", t->col_names[i]);
     d += sprintf(d, "\n");
 
     for (int i = 0; i < t->al->num_rows; i ++)
