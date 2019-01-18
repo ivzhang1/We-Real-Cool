@@ -1,13 +1,7 @@
-#include <stdio.h>
-#include <unistd.h>
-#include <sys/socket.h>
-#include <netdb.h>
-#include <string.h>
-#include <fcntl.h>
-#include <stdlib.h>
 #include "client.h"
 #include "commons.h"
 #include "login.h"
+
 
 int main(int argc, char * argv[]) {
     check_input(argc, 2, "./client <ip> <port>");
@@ -18,10 +12,11 @@ int main(int argc, char * argv[]) {
     while(log_or_reg());
     
     while (1) {
-        query(db_sd); // do stuff!
-        close(db_sd);
-        return 0;
+        char *response_buf = query(db_sd);
+        printf("%s\n", response_buf);
+        free(response_buf);
     }
+    return 0;
 }
 
 int connect_to_db(char *ip, char *port) {
@@ -46,9 +41,13 @@ int connect_to_db(char *ip, char *port) {
     return db_sd;
 }
 
-void query(int db_sd) {
+char *query(int db_sd) {
     char *query_buf = get_query();
     error_check("sending", (int) send(db_sd, query_buf, BUFFER_SIZE, 0));
+    free(query_buf);
+    char *response_buf = calloc(BUFFER_SIZE, sizeof(char));
+    recv(db_sd, response_buf, BUFFER_SIZE, 0);
+    return response_buf;
 }
 
 char *get_query() {
@@ -56,8 +55,8 @@ char *get_query() {
     prompt("Enter query: ", query_buf);
     // check if loading from file
     if (!strncmp(query_buf, "source", 6)) {
-        int fd = error_check("loading file", open(&(query_buf[7]), O_RDONLY));
-        query_buf[read(fd, query_buf, BUFFER_SIZE)] = '\0';
+        int fd = error_check("loading file", open(query_buf + 7, O_RDONLY));
+        query_buf[read(fd, query_buf, BUFFER_SIZE) - 1] = '\0';
     }
     return query_buf;
 }

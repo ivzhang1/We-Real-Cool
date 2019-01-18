@@ -1,7 +1,3 @@
-#include <errno.h>
-#include <stdlib.h>
-#include <string.h>
-#include <stdio.h>
 #include "commons.h"
 
 void prompt(char *display, char *input) {

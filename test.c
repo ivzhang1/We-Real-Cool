@@ -3,7 +3,9 @@
 #include <string.h>
 
 int main(){
-    char c = "c";
-    printf("%c\n", c);
-    return 0;
+
+
+  printf("[%d]\n", 5 - 7);
+
+  return 0;
 }

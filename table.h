@@ -9,9 +9,6 @@
 #include "al.h"
 #include "qs.h"
 
-#define KEY 52013
-
-#define SEG_SIZE 0xffff
 #define BUFFER_SIZE 1024
 #define DATA_SIZE 256
 
@@ -19,15 +16,21 @@
 #define MAX 1
 #define MIN 2
 
-#define OR 0;
-#define AND 1;
+#define OR 0
+#define AND 1
+
+#define PRIMARY_KEY 1
+#define AUTO_INC 2
+#define DEFAULT 3
 
 struct table {
     char name[DATA_SIZE];
+    int *tags;
+    union value *defaults;
     int *types;
-    char **names;
+    char **col_names;
     int num_columns;
-    struct array_list al;
+    struct array_list *al;
 };
 
 struct database {
@@ -35,25 +38,45 @@ struct database {
     int num_tables;
 };
 
-void print_row(struct table *t, int index);
+struct database *db_setup();
 
-void print_table(struct table *t);
+char *str_row(struct table *t, int index);
+
+char *str_table(struct table *t, int *read);
 
 //removes begining and ending spaces
 char *rs(char *str);
 
-int hs(char *str);
+//removes quotation marks
+char *rq(char *str);
 
-void create_table(char *str, struct database *db);
 
-void read_table(char *str, struct database *db);
+void set_val(struct table *t, int row, int col, int type, int tag, char *new_val);
 
-void insert(char *str, struct database *db);
+struct table *get_table(char *tname, struct database *db);
 
-void delete(char *str, struct database *db);
+void initialize(struct table *t, int i);
 
-void drop(char *str, struct database *db);
+char *set_tag(struct table *t, int j, char *tag);
 
-void sort(char *str, struct database *db);
+char *create_table(char *str, struct database *db);
 
-void execute(char *str, struct database *db);
+int index_of(struct table *t, char *col);
+
+int *bool_and(struct table *t, char **piece, int c);
+
+int *bool_or(struct table *t, char **piece, int c);
+
+char *read_spec(struct table *t, char *expr);
+
+char *insert(char *str, struct database *db);
+
+char *delete(char *str, struct database *db);
+
+char *drop(char *str, struct database *db);
+
+char *sort(char *str, struct database *db);
+
+char *update(char *str, struct database *db);
+
+char *execute(char *str, struct database *db);

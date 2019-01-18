@@ -12,16 +12,41 @@ int main(int argc, char * argv[]) {
     check_input(argc, 1, "./database <port>");
     char *port = argv[1];
     int listening_sd = server_setup(port);
-    int sem_id = error_check("creating semaphore", semget(KEY, 1, IPC_CREAT | 0644));
+    int client_sd;
+    int sem_id = sem_setup();
+    struct sembuf *sbuf = malloc(sizeof(struct sembuf));
+    sbuf->sem_num = 0;
+    sbuf->sem_flg = SEM_UNDO;
+    // int from_subserver, to_server;
+
+    struct database *db = db_setup();
+
     while (1) {
-        int client_sd = get_client(listening_sd);
-        if (!fork()) { // child
-            close(listening_sd);
-            fulfill(client_sd, sem_id); // do stuff!
-            close(client_sd);
-            exit(0);
-        } else close(client_sd); // parent
+        client_sd = get_client(listening_sd);
+        // mkfifo("wkp", 0644);
+        // from_subserver = open("wkp", O_RDONLY);
+        // if (!fork()) { // child
+            // close(listening_sd);
+        sbuf->sem_op = -1;
+        semop(sem_id, sbuf, 1);
+
+        while(fulfill(client_sd, db)); // do stuff!
+        close(client_sd);
+
+        sbuf->sem_op = 1;
+        semop(sem_id, sbuf, 1);
+            // exit(0);
+        // } else
+            // close(client_sd); // parent
     }
+}
+
+int sem_setup() {
+    int sem_id = error_check("creating semaphore", semget(SEM_KEY, 1, IPC_CREAT | 0644));
+
+    union semun ctl = {.val = 1};
+    semctl(sem_id, 0, SETVAL, ctl);
+    return sem_id;
 }
 
 int server_setup(char *port) {
@@ -41,7 +66,7 @@ int server_setup(char *port) {
         printf("[server %d] failed to bind", getpid());
         exit(1);
     }
-    error_check("listening", listen(listening_sd, 10));
+    error_check("listening", listen(listening_sd, 0));
     freeaddrinfo(results);
     return listening_sd;
 }
@@ -49,19 +74,39 @@ int server_setup(char *port) {
 int get_client(int listening_sd) {
     struct sockaddr_storage client_address;
     socklen_t sock_size = sizeof(client_address);
-    int client_sd = error_check("accepting",
-                                accept(listening_sd, (struct sockaddr *) &client_address, &sock_size));
+    int client_sd = error_check("accepting", accept(listening_sd, (struct sockaddr *) &client_address, &sock_size));
     printf("[server %d] connected to client\n", getpid());
     return client_sd;
 }
 
-void fulfill(int client_sd, int sem_id) {
-    char query_buf[BUFFER_SIZE];
-    error_check("receiving", (int) recv(client_sd, query_buf, sizeof(query_buf), 0));
-    printf("[subserver %d] received query, processing\n", getpid());
-    process(query_buf, sem_id);
+int fulfill(int client_sd, struct database *db) {
+    char *query_buf = malloc(BUFFER_SIZE);
+    // error_check("receiving", (int) recv(client_sd, query_buf, BUFFER_SIZE, 0));
+    if ( !recv(client_sd, query_buf, BUFFER_SIZE, 0) ){
+        // printf("##");
+        return 0;
+
+    }
+
+    char *piece;
+    char *response_buf = malloc(BUFFER_SIZE);
+    response_buf[0] = 0;
+
+    // query_buf[ strlen(query_buf) - 1 ] = 0;
+    while (piece = strsep(&query_buf, ";\n")){
+        printf("[%s]\n", piece);
+        strcat(response_buf, process(piece, db));
+    }
+    // error_check("responding", (int) send(client_sd, response_buf, BUFFER_SIZE, 0));
+    if ( !send(client_sd, response_buf, BUFFER_SIZE, 0) ){
+        // printf("#");
+        return 0;
+    }
+
+    free(response_buf);
+    return 1;
 }
 
-void process(char *query, int sem_id) {
-
+char * process(char *query, struct database *db) {
+    return execute(query, db);
 }
