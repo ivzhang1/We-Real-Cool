@@ -14,33 +14,19 @@ create <tablename> {
     ...
 };
 ```
-types: `int`, `double`, `string(<len>)`
+types: `int`, `double`, `string`
 
-tags: `-primarykey`, `-autoinc`, `-foreignkey(<tablename>.<colname>)`, `default(<value>)`
+tags: `-primarykey`, `-autoinc`, `default(<value>)`
 
 - Read
 
 ```
-read <tablename> [{
-    <jointype> join <tablename> [on <expr>],
-    [<jointype> join <tablename> [on <expr>],]
-    ...
-}] [all]OR[{
-    [$<operation>](<tablename>.<colname>) [as <name>],
-    [[$<operation>](<tablename>.<colname>) [as <name>],]
-    ...
-}]
-[where <expr>]
-[group by <name>]
-[order by <name> [<order>]]
-[limit <num>];
+read <tablename> [all] [where <expr>];
 ```
 
-operations: `avg`, `max`, `min`
-
-expressions: `<name/val> == <name/val>`
-
-orders: `asc`, `dsc`
+expressions: `col_name =/</> val
+              val =/</> val
+              col_name =/</> col_name`
 
 - Insert
 

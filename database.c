@@ -1,4 +1,12 @@
+
+#include <stdio.h>
+#include <unistd.h>
+#include <sys/sem.h>
+#include <sys/socket.h>
+#include <stdlib.h>
+#include <netdb.h>
 #include "database.h"
+#include "commons.h"
 
 int main(int argc, char * argv[]) {
     check_input(argc, 1, "./database <port>");
@@ -35,6 +43,7 @@ int main(int argc, char * argv[]) {
 
 int sem_setup() {
     int sem_id = error_check("creating semaphore", semget(SEM_KEY, 1, IPC_CREAT | 0644));
+
     union semun ctl = {.val = 1};
     semctl(sem_id, 0, SETVAL, ctl);
     return sem_id;
