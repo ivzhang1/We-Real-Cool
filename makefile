@@ -34,3 +34,4 @@ commons.o: commons.c commons.h
 
 clean:
 	rm *.o
+	rm *.h~
