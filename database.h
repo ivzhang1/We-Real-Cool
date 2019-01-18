@@ -16,13 +16,13 @@ int server_setup(char *port);
 
 int get_client(int listening_sd);
 
-void fulfill(int client_sd, int sem_id, struct table *db);
+int fulfill(int client_sd, int sem_id, struct table **db);
 
-char *process(char *query, struct table *db);
+char *process(char *query, struct table **db);
 
-char *create(char *query, struct table *db);
+char *create(char *query, struct table **db);
 
-char *init_columns(char *query, struct table *t);
+char *init_columns(char *query, struct table **t);
 
 
 #endif //FINAL_DATABASE_H
