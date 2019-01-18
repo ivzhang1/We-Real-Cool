@@ -22,7 +22,7 @@ int main(int argc, char * argv[]) {
         int client_sd = get_client(listening_sd);
         if (!fork()) { // child
             close(listening_sd);
-            fulfill(client_sd, sem_id, db); // do stuff!
+            while (fulfill(client_sd, sem_id, &db)); // do stuff!
             close(client_sd);
             exit(0);
         } else close(client_sd); // parent
@@ -67,9 +67,10 @@ int get_client(int listening_sd) {
     return client_sd;
 }
 
-void fulfill(int client_sd, int sem_id, struct table *db) {
+int fulfill(int client_sd, int sem_id, struct table **db) {
     char query_buf[BUFFER_SIZE];
-    error_check("receiving", (int) recv(client_sd, query_buf, sizeof(query_buf), 0));
+    int r = error_check("receiving", (int) recv(client_sd, query_buf, sizeof(query_buf), 0));
+    if (!r) return r;
     printf("[subserver %d] received query, processing\n", getpid());
     struct sembuf *sbuf = malloc(sizeof(struct sembuf));
     sbuf->sem_op = -1;
@@ -82,16 +83,17 @@ void fulfill(int client_sd, int sem_id, struct table *db) {
     free(sbuf);
     error_check("responding", (int) send(client_sd, response_buf, BUFFER_SIZE, 0));
     free(response_buf);
+    return r;
 }
 
-char *process(char *query, struct table *db) {
+char *process(char *query, struct table **db) {
     char *response = calloc(BUFFER_SIZE, sizeof(char));
     char *command;
     while ((command = strsep(&query, ";"))) {
         char *action = next_word(&command);
         if (!strcmp(action, "create")) {
             char *fail = create(command, db);
-            if (fail) return throw_error(fail);
+            if (fail) return fail;
         } else if (!strcmp(action, "insert")) {
 
         } else if (!strcmp(action, "read")) {
@@ -106,23 +108,23 @@ char *process(char *query, struct table *db) {
 
         }
     }
+    strcat(response, "success");
     return response;
 }
 
-char *create(char *query, struct table *db) {
+char *create(char *query, struct table **db) {
     char *name = next_word(&query);
-    if (!is_alpha(name)) return throw_error("invalid table name\n");
+    if (!name || !is_alpha(name)) return throw_error("invalid table name\n");
     struct table *t = malloc(sizeof(struct table));
-    strcat(t->name, "table_");
     strcat(t->name, name);
     t->columns = NULL;
-    char *fail = init_columns(query, t);
-    if (fail) return throw_error(fail);
-    HASH_ADD_STR(db, name, t);
+    char *fail = init_columns(query, &t);
+    if (fail) return fail;
+    HASH_ADD_STR(*db, name, t);
     return NULL;
 }
 
-char *init_columns(char *query, struct table *t) {
+char *init_columns(char *query, struct table **t) {
     // make sure there was nothing invalid before '{'
     char *prev = strsep(&query, "{");
     if (!empty_string(prev)) return throw_error("invalid syntax before {\n");
@@ -149,7 +151,19 @@ char *init_columns(char *query, struct table *t) {
         col->type = type;
         // set tags
         col->tags = 0; // todo: parse tags
-
+        char *name = next_word(&header);
+        if (!is_alpha(name)) {
+            char *err = calloc(100, sizeof(char));
+            sprintf(err, "invalid column name, column %d\n", i);
+            return err;
+        }
+        if (!empty_string(header)) {
+            char *err = calloc(100, sizeof(char));
+            sprintf(err, "expected end of column declaration, column %d\n", i);
+            return err;
+        } // todo: after tags
+        strcpy((*t)->name, name);
+        HASH_ADD_STR((*t)->columns, name, col);
     }
     return NULL;
 }
