@@ -4,23 +4,32 @@ int main(int argc, char * argv[]) {
     check_input(argc, 1, "./database <port>");
     char *port = argv[1];
     int listening_sd = server_setup(port);
+    int client_sd;
     int sem_id = sem_setup();
-    int from_subserver, to_server;
+    struct sembuf *sbuf = malloc(sizeof(struct sembuf));
+    sbuf->sem_num = 0;
+    sbuf->sem_flg = SEM_UNDO;
+    // int from_subserver, to_server;
 
     struct database *db = db_setup();
 
     while (1) {
-        int client_sd = get_client(listening_sd);
-        mkfifo("wkp", 0644);
-        from_subserver = open("wkp", O_RDONLY);
-        if (!fork()) { // child
-            close(listening_sd);
-            while(1)
-                fulfill(client_sd, sem_id, db); // do stuff!
-            close(client_sd);
-            exit(0);
-        } else
-            close(client_sd); // parent
+        client_sd = get_client(listening_sd);
+        // mkfifo("wkp", 0644);
+        // from_subserver = open("wkp", O_RDONLY);
+        // if (!fork()) { // child
+            // close(listening_sd);
+        sbuf->sem_op = -1;
+        semop(sem_id, sbuf, 1);
+
+        while(fulfill(client_sd, db)); // do stuff!
+        close(client_sd);
+
+        sbuf->sem_op = 1;
+        semop(sem_id, sbuf, 1);
+            // exit(0);
+        // } else
+            // close(client_sd); // parent
     }
 }
 
@@ -48,7 +57,7 @@ int server_setup(char *port) {
         printf("[server %d] failed to bind", getpid());
         exit(1);
     }
-    error_check("listening", listen(listening_sd, 10));
+    error_check("listening", listen(listening_sd, 0));
     freeaddrinfo(results);
     return listening_sd;
 }
@@ -61,15 +70,15 @@ int get_client(int listening_sd) {
     return client_sd;
 }
 
-void fulfill(int client_sd, int sem_id, struct database *db) {
+int fulfill(int client_sd, struct database *db) {
     char *query_buf = malloc(BUFFER_SIZE);
-    error_check("receiving", (int) recv(client_sd, query_buf, BUFFER_SIZE, 0));
-    printf("[subserver %d] received query, processing\n", getpid());
-    struct sembuf *sbuf = malloc(sizeof(struct sembuf));
-    sbuf->sem_op = -1;
-    sbuf->sem_num = 0;
-    sbuf->sem_flg = SEM_UNDO;
-    semop(sem_id, sbuf, 1);
+    // error_check("receiving", (int) recv(client_sd, query_buf, BUFFER_SIZE, 0));
+    if ( !recv(client_sd, query_buf, BUFFER_SIZE, 0) ){
+        // printf("##");
+        return 0;
+
+    }
+
     char *piece;
     char *response_buf = malloc(BUFFER_SIZE);
     response_buf[0] = 0;
@@ -79,12 +88,14 @@ void fulfill(int client_sd, int sem_id, struct database *db) {
         printf("[%s]\n", piece);
         strcat(response_buf, process(piece, db));
     }
-    error_check("responding", (int) send(client_sd, response_buf, BUFFER_SIZE, 0));
-    sbuf->sem_op = 1;
-    semop(sem_id, sbuf, 1);
-    free(sbuf);
-    free(response_buf);
+    // error_check("responding", (int) send(client_sd, response_buf, BUFFER_SIZE, 0));
+    if ( !send(client_sd, response_buf, BUFFER_SIZE, 0) ){
+        // printf("#");
+        return 0;
+    }
 
+    free(response_buf);
+    return 1;
 }
 
 char * process(char *query, struct database *db) {
