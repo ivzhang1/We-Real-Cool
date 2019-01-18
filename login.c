@@ -31,50 +31,20 @@ int login(){
   printf("Student Name: ");
   fgets(student_name, 256, stdin);
   *(student_name + strlen(student_name) - 1) = '\0';
-
-  key_t key;
-  int shmid;
-  struct account *accounts;
-
-  key = ftok("account_manager.c", 'R');
-  shmid = shmget(key, 256 * sizeof(struct account), 0644);
-  accounts = (struct account *)shmat(shmid, NULL, 0);
-
-  if(shmid!=-1){
-    printf("shared contents\n");
-    int i = 0;
-    while(i < 256 || !strcmp(accounts[i].username, student_name)){
-      i++;
-    }
-
-    if(strcmp(accounts[i].username, student_name)){
-      printf("Password: ");
-      my_getpass(pass, 256, stdin);
-      *(pass + strlen(pass) - 1) = '\0';
-      while(!strcmp(accounts[i].password, pass)){
-	 printf("Wrong password! Try again!\n");
-
-	 printf("Password: ");
-	 my_getpass(pass, 256, stdin);
-      }
-      if(strcmp(accounts[i].password, pass)==0){
-	return 0;
-      }
-
-    }
-  }
-  else{
-    printf("No Accounts Exist!\n");
-  }
-
-
-
-
-
-
-
   
-  return 1;
+  printf("Password: ");
+  my_getpass(pass, 256, stdin);
+  *(pass + strlen(pass) - 1) = '\0';
+  //while(!strcmp(accounts[i].password, pass)){
+  //  printf("Wrong password! Try again!\n");
+    
+  //printf("Password: ");
+    //  my_getpass(pass, 256, stdin);
+    //*(pass + strlen(pass) - 1) = '\0';
+
+  //}
+  
+  return 0;
 }
 
 int registerr(){
