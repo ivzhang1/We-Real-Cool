@@ -54,14 +54,55 @@ int login(int db_sd){
   //}
 
   char user_pass[1000];
-  sprintf(user_pass, "read usernames * where username = %s & password = %s", student_name, pass); //read usernames all where username = ivan10 & password = ivan
+  sprintf(user_pass, "read usernames all where username = \"%s\" & password = \"%s\"", student_name, pass); //read usernames all where username = ivan10 & password = ivan
   //printf("%s", execute(user_pass, db));
 
   error_check("sending", (int) send(db_sd, user_pass, 1000, 0));
   char *response_buf = calloc(1000, sizeof(char));
   recv(db_sd, response_buf, 1000, 0);
+
+  printf("[%s]\n", response_buf);
+  printf("[%d]\n", strcmp(response_buf,"| [username] | [password] | \n"));
+  printf("[%d]\n", strcmp(response_buf,""));
+
+  while(!strcmp(response_buf,"| [username] | [password] | \n") || !strcmp(response_buf,"")){
+    free(response_buf);
+    printf("[%s]\n", response_buf);
+    printf("[%d]\n", strcmp(response_buf,"| [username] | [password] | \n"));
+    printf("[%d]\n", strcmp(response_buf,""));
+    printf("Login Failed!\n");
+    fflush(stdin);
+
+    char student_name[256];
+    char pass[256];
+
+    printf("Student Name: ");
+    fgets(student_name, 256, stdin);
+    *(student_name + strlen(student_name) - 1) = '\0';
+
+    printf("Password: ");
+    my_getpass(pass, 256, stdin);
+    *(pass + strlen(pass) - 1) = '\0';
+    //while(!strcmp(accounts[i].password, pass)){
+    //  printf("Wrong password! Try again!\n");
+
+    //printf("Password: ");
+      //  my_getpass(pass, 256, stdin);
+      //*(pass + strlen(pass) - 1) = '\0';
+
+    //}
+
+    sprintf(user_pass, "read usernames all where username = \"%s\" & password = \"%s\"", student_name, pass); //read usernames all where username = ivan10 & password = ivan
+    //printf("%s", execute(user_pass, db));
+    response_buf = calloc(1000, sizeof(char));
+    error_check("sending", (int) send(db_sd, user_pass, 1000, 0));
+    recv(db_sd, response_buf, 1000, 0);
+  }
+
   free(response_buf);
-  //printf("%s\n", response_buf);
+
+
+  printf("Login Successful!\n");
 
 
   return 0;
