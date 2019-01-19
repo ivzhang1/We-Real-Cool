@@ -4,7 +4,8 @@
 #include <sys/sem.h>
 #include <sys/socket.h>
 #include <stdlib.h>
-#include <netdb.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 #include "database.h"
 #include "commons.h"
 
@@ -20,6 +21,10 @@ int main(int argc, char * argv[]) {
     // int from_subserver, to_server;
 
     struct database *db = db_setup();
+
+    char user_pass[] = "create  usernames  {  string username  ,  string   password  } ";
+    printf("%s", execute(user_pass, db));
+
 
     while (1) {
         client_sd = get_client(listening_sd);

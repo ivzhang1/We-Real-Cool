@@ -1,8 +1,4 @@
 #include <netdb.h>
-#include <errno.h>
-#include <stdlib.h>
-#include <string.h>
-#include <stdio.h>
 
 #define BUFFER_SIZE 1024
 #define DATA_SIZE 256
