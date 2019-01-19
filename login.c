@@ -28,13 +28,13 @@ int login(){
   char student_name[256];
   char pass[256];
 
-  char user_pass[1000];
-  sprintf(user_pass, "read usernames * where username = %s", student_name);
-  printf("%s\n", user_pass);
-
   printf("Student Name: ");
   fgets(student_name, 256, stdin);
   *(student_name + strlen(student_name) - 1) = '\0';
+
+  char user_pass[1000];
+  sprintf(user_pass, "read usernames * where username = %s", student_name);
+  printf("%s\n", user_pass);
 
   printf("Password: ");
   my_getpass(pass, 256, stdin);
