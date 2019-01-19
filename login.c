@@ -61,15 +61,15 @@ int login(int db_sd){
   char *response_buf = calloc(BUFFER_SIZE, sizeof(char));
   recv(db_sd, response_buf, BUFFER_SIZE, 0);
 
-  printf("[%s]\n", response_buf);
-  printf("[%d]\n", strcmp(response_buf,"| [username] | [password] | \n"));
-  printf("[%d]\n", strcmp(response_buf,""));
+  //printf("[%s]\n", response_buf);
+  //printf("[%d]\n", strcmp(response_buf,"| [username] | [password] | \n"));
+  //printf("[%d]\n", strcmp(response_buf,""));
 
   while(!strcmp(response_buf,"| [username] | [password] | \n") || !strcmp(response_buf,"")){
 
-    printf("[%s]\n", response_buf);
-    printf("[%d]\n", strcmp(response_buf,"| [username] | [password] | \n"));
-    printf("[%d]\n", strcmp(response_buf,""));
+    //printf("[%s]\n", response_buf);
+    //printf("[%d]\n", strcmp(response_buf,"| [username] | [password] | \n"));
+    //printf("[%d]\n", strcmp(response_buf,""));
     printf("Login Failed!\n");
     fflush(stdin);
 
