@@ -6,7 +6,7 @@ Simple CRUD Database System in C
 
 ### Query Syntax
 * Things inside `[]` are optional.
-* Things inside `<>` can vary.
+* Things inside `<>` are variables.
 
 - Create
 
@@ -39,7 +39,7 @@ column_name <operation> column_name
 operations: `=`, `>`, `<`
 
 boolean operators: `&`, `|`
-- We only implemented and use single character because that's much easier to implement by `strsep()`.
+ - We only implemented and use single character because that's much easier to implement by `strsep()`.
 
 - Insert
 
