@@ -124,7 +124,7 @@ int delete_account(int db_sd){
 int create_or_Not(int db_sd){
   char input[256];
 
-  printf("y ==> Create an Account\nn ==> Delete an Account\n");
+  printf("y ==> Create an Account\nn ==> Delete an Account\nEnter y/n: ");
   fgets(input, 256, stdin);
 
 
