@@ -66,7 +66,7 @@ int login(int db_sd){
   printf("[%d]\n", strcmp(response_buf,""));
 
   while(!strcmp(response_buf,"| [username] | [password] | \n") || !strcmp(response_buf,"")){
-    free(response_buf);
+
     printf("[%s]\n", response_buf);
     printf("[%d]\n", strcmp(response_buf,"| [username] | [password] | \n"));
     printf("[%d]\n", strcmp(response_buf,""));
@@ -94,16 +94,14 @@ int login(int db_sd){
 
     sprintf(user_pass, "read usernames all where username = \"%s\" & password = \"%s\"", student_name, pass); //read usernames all where username = ivan10 & password = ivan
     //printf("%s", execute(user_pass, db));
-    response_buf = calloc(1000, sizeof(char));
+
     error_check("sending", (int) send(db_sd, user_pass, 1000, 0));
     recv(db_sd, response_buf, 1000, 0);
+    //printf("[%s]\n", response_buf);
   }
 
   free(response_buf);
-
-
   printf("Login Successful!\n");
-
 
   return 0;
 }

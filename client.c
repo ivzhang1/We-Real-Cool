@@ -2,14 +2,13 @@
 #include "commons.h"
 #include "login.h"
 
-
 int main(int argc, char * argv[]) {
     check_input(argc, 2, "./client <ip> <port>");
     char *ip = argv[1];
     char *port = argv[2];
     int db_sd = connect_to_db(ip, port);
 
-    while(login(db_sd));
+    login(db_sd);
 
     while (1) {
         char *response_buf = query(db_sd);
