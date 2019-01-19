@@ -4,8 +4,7 @@
 #include <sys/sem.h>
 #include <sys/socket.h>
 #include <stdlib.h>
-#include <sys/types.h>
-#include <sys/stat.h>
+#include <netdb.h>
 #include "database.h"
 #include "commons.h"
 
@@ -22,7 +21,19 @@ int main(int argc, char * argv[]) {
     sbuf->sem_flg = SEM_UNDO;
     // int from_subserver, to_server;
 
+<<<<<<< HEAD
 
+||||||| fd17757... Merge pull request #10 from ivzhang1/user_login
+    struct database *db = db_setup();
+
+    char user_pass[] = "create  usernames  {  string username  ,  string   password  } ";
+    printf("%s", execute(user_pass, db));
+
+
+=======
+    struct database *db = db_setup();
+
+>>>>>>> parent of fd17757... Merge pull request #10 from ivzhang1/user_login
     while (1) {
         client_sd = get_client(listening_sd);
         // mkfifo("wkp", 0644);
