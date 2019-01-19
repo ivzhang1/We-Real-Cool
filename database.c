@@ -11,7 +11,6 @@
 int main(int argc, char * argv[]) {
     check_input(argc, 1, "./database <port>");
     char *port = argv[1];
-    struct database *db = db_setup();
 
     //char user_pass[] = "create  usernames  {  string username  ,  string   password  } ";
     //printf("%s", execute(user_pass, db));
@@ -22,6 +21,7 @@ int main(int argc, char * argv[]) {
     sbuf->sem_num = 0;
     sbuf->sem_flg = SEM_UNDO;
     // int from_subserver, to_server;
+    struct database *db = db_setup();
 
 
     while (1) {
