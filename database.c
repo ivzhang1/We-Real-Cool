@@ -11,7 +11,6 @@
 int main(int argc, char * argv[]) {
     check_input(argc, 1, "./database <port>");
     char *port = argv[1];
-    struct database *db = db_setup();
 
     int listening_sd = server_setup(port);
     int client_sd;
@@ -21,19 +20,11 @@ int main(int argc, char * argv[]) {
     sbuf->sem_flg = SEM_UNDO;
     // int from_subserver, to_server;
 
-<<<<<<< HEAD
-
-||||||| fd17757... Merge pull request #10 from ivzhang1/user_login
     struct database *db = db_setup();
 
     char user_pass[] = "create  usernames  {  string username  ,  string   password  } ";
     printf("%s", execute(user_pass, db));
 
-
-=======
-    struct database *db = db_setup();
-
->>>>>>> parent of fd17757... Merge pull request #10 from ivzhang1/user_login
     while (1) {
         client_sd = get_client(listening_sd);
         // mkfifo("wkp", 0644);
