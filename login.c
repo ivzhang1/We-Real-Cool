@@ -53,13 +53,13 @@ int login(int db_sd){
 
   //}
 
-  char user_pass[1000];
+  char user_pass[BUFFER_SIZE];
   sprintf(user_pass, "read usernames all where username = \"%s\" & password = \"%s\"", student_name, pass); //read usernames all where username = ivan10 & password = ivan
   //printf("%s", execute(user_pass, db));
 
-  error_check("sending", (int) send(db_sd, user_pass, 1000, 0));
-  char *response_buf = calloc(1000, sizeof(char));
-  recv(db_sd, response_buf, 1000, 0);
+  error_check("sending", (int) send(db_sd, user_pass, BUFFER_SIZE, 0));
+  char *response_buf = calloc(BUFFER_SIZE, sizeof(char));
+  recv(db_sd, response_buf, BUFFER_SIZE, 0);
 
   printf("[%s]\n", response_buf);
   printf("[%d]\n", strcmp(response_buf,"| [username] | [password] | \n"));
@@ -95,8 +95,8 @@ int login(int db_sd){
     sprintf(user_pass, "read usernames all where username = \"%s\" & password = \"%s\"", student_name, pass); //read usernames all where username = ivan10 & password = ivan
     //printf("%s", execute(user_pass, db));
 
-    error_check("sending", (int) send(db_sd, user_pass, 1000, 0));
-    recv(db_sd, response_buf, 1000, 0);
+    error_check("sending", (int) send(db_sd, user_pass, BUFFER_SIZE, 0));
+    recv(db_sd, response_buf, BUFFER_SIZE, 0);
     //printf("[%s]\n", response_buf);
   }
 
