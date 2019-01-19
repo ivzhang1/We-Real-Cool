@@ -1,10 +1,3 @@
-#include <stdio.h>
-#include <unistd.h>
-#include <sys/sem.h>
-#include <sys/socket.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <stdlib.h>
 #include <netdb.h>
 
 #include "commons.h"
@@ -30,4 +23,3 @@ int get_client(int listening_sd);
 int fulfill(int client_sd, struct database *db);
 
 char *process(char *query, struct database *db);
-
