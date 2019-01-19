@@ -80,9 +80,9 @@ In other terminals:
 ```
 & ./client <ip> <port>
 ```
-Client's query commands must be separated by semicolons or newline.
+ - Client's query commands must be separated by semicolons or newline.
 
-If two or more clients try to access the server at the same time, the one that connects late will be blocked by the semaphore. That client can still type commands but they won't be processed until the the other client exits.
+ - If two or more clients try to access the server at the same time, the one that connects late will be blocked by the semaphore. That client can still type commands but they won't be processed until the the other client exits.
 
 #### Bugs
-We tried to catch as many reasonable bad commands possible, such as creating a table that already exists, inserting an incomplete row, and creating a table with multiple columns with the same name. However, if the user insists to enter commands that do not follow the syntax, segmentation faults may occur and the server will crash.
+ - We tried to catch as many reasonable bad commands possible, such as creating a table that already exists, inserting an incomplete row, and creating a table with multiple columns with the same name. However, if the user insists to enter commands that do not follow the syntax, segmentation faults may occur and the server will crash.
