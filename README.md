@@ -78,6 +78,10 @@ $ ./database <port>
 ```
 In other terminals:
 ```
+& ./account_manager <ip> <port>
+```
+- Create and Delete accounts that can access the database
+```
 & ./client <ip> <port>
 ```
  - Client's query commands must be separated by semicolons or newline.
@@ -86,3 +90,4 @@ In other terminals:
 
 #### Bugs
  - We tried to catch as many reasonable bad commands possible, such as creating a table that already exists, inserting an incomplete row, and creating a table with multiple columns with the same name. However, if the user insists to enter commands that do not follow the syntax, segmentation faults may occur and the server will crash.
+ - User can access the usernames table (and DROP it).
