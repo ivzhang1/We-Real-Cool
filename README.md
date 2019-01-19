@@ -6,9 +6,9 @@ Simple CRUD Database System in C
 
 ### Query Syntax
 * Things inside `[]` are optional.
-* Things inside `<>` can vary.
+* Things inside `<>` are variables.
 
-- Create
+#### Create
 
 ```
 create <table_name> {
@@ -22,7 +22,7 @@ types: `int`, `double`, `string`
 
 tags: `-primarykey`, `-autoinc`, `-default(<value>)`
 
-- Read
+#### Read
 
 ```
 read <table_name> * [where <expression0> [<boolean_operator> <expression0> ... ] ]
@@ -39,9 +39,9 @@ column_name <operation> column_name
 operations: `=`, `>`, `<`
 
 boolean operators: `&`, `|`
-- We only implemented and use single character because that's much easier to implement by `strsep()`.
+ - We only implemented and use single character because that's much easier to implement by `strsep()`.
 
-- Insert
+#### Insert
 
 ```
 insert <table_name> {
@@ -51,17 +51,20 @@ insert <table_name> {
     (<column_name>:<value>, [<column_name>:<value>, ..., <column_name>:<value>]) ]
 }
 ```
-
-- Update
+#### Update
 
 `update <table_name>.<column_name> to <value> [where <expression0> [<boolean_operator> <expression0> ... ] ]`
 
-- Delete
+#### Delete
 
 `delete <table_name> [where <expression0> [<boolean_operator> <expression0> ... ] ]`
 
 `drop <table_name>;`
 
-- Load Commands From File
+#### Sort
+
+`sort <table_name> by <column_name>`
+
+#### Load Commands From File
   - Commands must be separated by semicolons or newline.
-`source <file_name>;`
+`source <file_name>`
