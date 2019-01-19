@@ -22,4 +22,3 @@ int get_client(int listening_sd);
 
 int fulfill(int client_sd, struct database *db);
 
-char *process(char *query, struct database *db);

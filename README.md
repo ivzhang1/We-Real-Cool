@@ -5,49 +5,87 @@ Ivan Zhang, Simon Berens, William Lu (Period 4)
 Simple CRUD Database System in C
 
 ### Query Syntax
-- Create
+* Things inside `[]` are optional.
+* Things inside `<>` are variables.
+
+#### Create
 
 ```
-create <tablename> {
-    <type> <colname> [<tags>],
-    [<type> <colname> [<tags>],]
+create <table_name> {
+    <type> <column_name> [<tag>],
+  [ <type> <column_name> [<tag>],
     ...
-};
+    <type> <column_name> [<tag>], ]
+}
 ```
 types: `int`, `double`, `string`
 
-tags: `-primarykey`, `-autoinc`, `default(<value>)`
+tags: `-primarykey`, `-autoinc`, `-default(<value>)`
 
-- Read
-
-```
-read <tablename> [all] [where <expr>];
-```
-
-expressions: `col_name =/</> val
-              val =/</> val
-              col_name =/</> col_name`
-
-- Insert
+#### Read
 
 ```
-insert <tablename> {
-    (<colname>:<value>, [<colname>:<value>,] ...),
-    [(<colname>:<value>, [<colname>:<value>,] ...),]
+read <table_name> * [where <expression0> [<boolean_operator> <expression0> ... ] ]
+read <table_name>.<column_name> [where <expression0> [<boolean_operator> <expression0> ... ] ]
+```
+
+expressions:
+```
+column_name <operation> value
+value <operation> value
+column_name <operation> column_name
+```
+
+operations: `=`, `>`, `<`
+
+boolean operators: `&`, `|`
+ - We only implemented and use single character because that's much easier to implement by `strsep()`.
+
+#### Insert
+
+```
+insert <table_name> {
+    (<column_name>:<value>, [<column_name>:<value>, ..., <column_name>:<value>])
+  [ (<column_name>:<value>, [<column_name>:<value>, ..., <column_name>:<value>])
     ...
-};
+    (<column_name>:<value>, [<column_name>:<value>, ..., <column_name>:<value>]) ]
+}
 ```
+(Yes, you have to insert at least one value per row.)
 
-- Update
+#### Update
 
-`update <tablename>.<colname> to <val> where <expr>;`
+`update <table_name>.<column_name> to <value> [where <expression0> [<boolean_operator> <expression0> ... ] ]`
 
-- Delete
+#### Delete
 
-`delete <tablename> where <expr>;`
+`delete <table_name> [where <expression0> [<boolean_operator> <expression0> ... ] ]`
+(If there is no where block, all the rows in the table will be deleted.)
 
-`drop <tablename>;`
+`drop <table_name>;`
 
-- Load From File
+#### Sort
 
-`source <filename>;`
+`sort <table_name> by <column_name>`
+
+#### Load Commands From File
+`source <file_name>`
+
+#### How to Run
+Open >= 2 terminals
+
+In one terminal:
+```
+$ make
+$ ./database <port>
+```
+In other terminals:
+```
+& ./client <ip> <port>
+```
+ - Client's query commands must be separated by semicolons or newline.
+
+ - If two or more clients try to access the server at the same time, the one that connects late will be blocked by the semaphore. That client can still type commands but they won't be processed until the the other client exits.
+
+#### Bugs
+ - We tried to catch as many reasonable bad commands possible, such as creating a table that already exists, inserting an incomplete row, and creating a table with multiple columns with the same name. However, if the user insists to enter commands that do not follow the syntax rule, segmentation faults may occur and the server will crash.

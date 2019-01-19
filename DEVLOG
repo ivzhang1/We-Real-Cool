@@ -65,3 +65,14 @@ williamL -- 2019-1-16 9:30
 --------------------------------------------------------------
 al.c now has struct row **rows instead of struct row *row
 ==============================================================
+williamL -- 2019-1-17 21:50
+--------------------------------------------------------------
+made it so that server no longer forks.
+ - database is now stored in ram in the server
+ - which means that the server should not exit
+==============================================================
+williamL -- 2019-1-18 22:35
+--------------------------------------------------------------
+the read command can now specify a column
+changed from "read <table_name> all" to "read <table_name> *"
+==============================================================

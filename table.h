@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
+#include <unistd.h>
 #include <sys/shm.h>
 #include <sys/ipc.h>
 #include <sys/types.h>
@@ -34,7 +34,7 @@ struct table {
 };
 
 struct database {
-    struct table *tables;
+    struct table **tables;
     int num_tables;
 };
 
@@ -42,7 +42,7 @@ struct database *db_setup();
 
 char *str_row(struct table *t, int index);
 
-char *str_table(struct table *t, int *read);
+char *str_table(struct table *t, int *read, int col);
 
 //removes begining and ending spaces
 char *rs(char *str);
@@ -67,11 +67,13 @@ int *bool_and(struct table *t, char **piece, int c);
 
 int *bool_or(struct table *t, char **piece, int c);
 
-char *read_spec(struct table *t, char *expr);
+char *read_spec(struct table *t, char *col, char *expr);
 
 char *insert(char *str, struct database *db);
 
 char *delete(char *str, struct database *db);
+
+void kill_table(struct database *db, int i);
 
 char *drop(char *str, struct database *db);
 

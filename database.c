@@ -99,8 +99,8 @@ int fulfill(int client_sd, struct database *db) {
 
     // query_buf[ strlen(query_buf) - 1 ] = 0;
     while (piece = strsep(&query_buf, ";\n")){
-        printf("[%s]\n", piece);
-        strcat(response_buf, process(piece, db));
+        // printf("[%s]\n", piece);
+        strcat(response_buf, execute(piece, db));
     }
     // error_check("responding", (int) send(client_sd, response_buf, BUFFER_SIZE, 0));
     if ( !send(client_sd, response_buf, BUFFER_SIZE, 0) ){
@@ -110,8 +110,4 @@ int fulfill(int client_sd, struct database *db) {
 
     free(response_buf);
     return 1;
-}
-
-char * process(char *query, struct database *db) {
-    return execute(query, db);
 }
