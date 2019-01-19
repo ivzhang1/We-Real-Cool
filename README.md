@@ -51,8 +51,6 @@ insert <table_name> {
     (<column_name>:<value>, [<column_name>:<value>, ..., <column_name>:<value>]) ]
 }
 ```
-(Yes, you have to insert at least one value per row.)
-
 #### Update
 
 `update <table_name>.<column_name> to <value> [where <expression0> [<boolean_operator> <expression0> ... ] ]`
@@ -60,7 +58,6 @@ insert <table_name> {
 #### Delete
 
 `delete <table_name> [where <expression0> [<boolean_operator> <expression0> ... ] ]`
-(If there is no where block, all the rows in the table will be deleted.)
 
 `drop <table_name>;`
 
@@ -88,4 +85,4 @@ In other terminals:
  - If two or more clients try to access the server at the same time, the one that connects late will be blocked by the semaphore. That client can still type commands but they won't be processed until the the other client exits.
 
 #### Bugs
- - We tried to catch as many reasonable bad commands possible, such as creating a table that already exists, inserting an incomplete row, and creating a table with multiple columns with the same name. However, if the user insists to enter commands that do not follow the syntax rule, segmentation faults may occur and the server will crash.
+ - We tried to catch as many reasonable bad commands possible, such as creating a table that already exists, inserting an incomplete row, and creating a table with multiple columns with the same name. However, if the user insists to enter commands that do not follow the syntax, segmentation faults may occur and the server will crash.
