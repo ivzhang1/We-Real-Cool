@@ -14,8 +14,6 @@ int main(int argc, char * argv[]) {
     char *port = argv[1];
     struct database *db = db_setup();
 
-    char user_pass[] = "create  usernames  {  string username  ,  string   password  } ";
-    printf("%s", execute(user_pass, db));
     int listening_sd = server_setup(port);
     int client_sd;
     int sem_id = sem_setup();

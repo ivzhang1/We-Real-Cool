@@ -4,6 +4,8 @@ struct database *db_setup(){
     struct database *db = malloc(sizeof(struct database));
     db->tables = calloc(10, sizeof(struct table *));
     db->num_tables = 0;
+
+
     return db;
 }
 
