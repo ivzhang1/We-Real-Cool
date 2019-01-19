@@ -92,7 +92,7 @@ int login(int db_sd){
 
     //}
 
-    sprintf(user_pass, "read usernames all where username = \"%s\" & password = \"%s\"", student_name, pass); //read usernames all where username = ivan10 & password = ivan
+    sprintf(user_pass, "read usernames * where username = \"%s\" & password = \"%s\"", student_name, pass); //read usernames all where username = ivan10 & password = ivan
     //printf("%s", execute(user_pass, db));
 
     error_check("sending", (int) send(db_sd, user_pass, BUFFER_SIZE, 0));
