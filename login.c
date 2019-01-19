@@ -70,7 +70,7 @@ int login(int db_sd){
     //printf("[%s]\n", response_buf);
     //printf("[%d]\n", strcmp(response_buf,"| [username] | [password] | \n"));
     //printf("[%d]\n", strcmp(response_buf,""));
-    //printf("Login Failed!\n");
+    printf("Login Failed!\n");
     fflush(stdin);
 
     char student_name[256];

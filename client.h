@@ -6,6 +6,7 @@
 #include <fcntl.h>
 #include <stdlib.h>
 
+#include "login.h"
 #include "commons.h"
 #include "table.h"
 
