@@ -35,7 +35,7 @@ int main(int argc, char * argv[]) {
         sbuf->sem_op = -1;
         semop(sem_id, sbuf, 1);
 
-        printf("stdin, %s\n", stdin)
+        printf("stdin, %s\n", stdin);
         while(fulfill(client_sd, db)); // do stuff!
         close(client_sd);
 
