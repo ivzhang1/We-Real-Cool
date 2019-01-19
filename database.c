@@ -22,7 +22,7 @@ int main(int argc, char * argv[]) {
 
     struct database *db = db_setup();
 
-    char user_pass[] = "create  usernames  {  string s  ,  string   s  } ";
+    char user_pass[] = "create  usernames  {  string username  ,  string   password  } ";
     printf("%s", execute(user_pass, db));
 
 
