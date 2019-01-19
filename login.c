@@ -32,10 +32,6 @@ int login(){
   fgets(student_name, 256, stdin);
   *(student_name + strlen(student_name) - 1) = '\0';
 
-  char user_pass[1000];
-  sprintf(user_pass, "read usernames * where username = %s", student_name);
-  printf("%s\n", user_pass);
-
   printf("Password: ");
   my_getpass(pass, 256, stdin);
   *(pass + strlen(pass) - 1) = '\0';
@@ -47,6 +43,11 @@ int login(){
     //*(pass + strlen(pass) - 1) = '\0';
 
   //}
+
+  char user_pass[1000];
+  sprintf(user_pass, "read usernames * where username = %s & password = ", student_name, pass);
+  printf("%s", execute(user_pass, db));
+
 
   return 0;
 }
