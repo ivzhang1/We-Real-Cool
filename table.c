@@ -2,7 +2,7 @@
 
 struct database *db_setup(){
     struct database *db = malloc(sizeof(struct database));
-    db->tables = calloc(10, sizeof(struct table));
+    db->tables = calloc(10, sizeof(struct table *));
     db->num_tables = 0;
     return db;
 }
@@ -22,22 +22,53 @@ char *str_row(struct table *t, int index){
     return s;
 }
 
-char *str_table(struct table *t, int *read){
+char *str_column(struct table *t, int *read, int index){
     char *s = malloc(BUFFER_SIZE);
     char *d = s;
-    d += sprintf(d, "| ");
-    for (int i = 0; i < t->num_columns; i ++)
-        d += sprintf(d, "%s | ", t->col_names[i]);
-    d += sprintf(d, "\n");
-
-    for (int i = 0; i < t->al->num_rows; i ++)
-        if (read[i]){
-            d = str_row(t, i);
-            strcat(s, d);
-            free(d);
-        }
-        // printf("\n");
+    // d += sprintf(d, "| %s |\n", t->col_names[index]);
+    // for (int i = 0; i < t->al->num_rows; i ++){
+    //     printf("%d\n", read[i]);
+    //     // sleep(1);
+    // }
+    // printf("%d\n", t->al->num_rows);
+    if (t->types[index] == INT){
+        for (int i = 0; i < t->al->num_rows; i ++)
+            if (read[i])
+                d += sprintf(d, "| %d |\n", get(t->al, i)->values[index].integer);
+    }
+    else if (t->types[index] == DOUBLE){
+        for (int i = 0; i < t->al->num_rows; i ++)
+            if (read[i])
+                d += sprintf(d, "| %lf |\n", get(t->al, i)->values[index].decimal);
+    }
+    else if (t->types[index] == STRING){
+        for (int i = 0; i < t->al->num_rows; i ++)
+            if (read[i])
+                d += sprintf(d, "| %s |\n", get(t->al, i)->values[index].string);
+    }
     return s;
+}
+
+char *str_table(struct table *t, int *read, int col){
+    char *s = malloc(BUFFER_SIZE);
+    char *d = s;
+    if (col == -1){
+      // d += sprintf(d, "| ");
+      // for (int i = 0; i < t->num_columns; i ++)
+      //     d += sprintf(d, "%s | ", t->col_names[i]);
+      // d += sprintf(d, "\n");
+
+      for (int i = 0; i < t->al->num_rows; i ++)
+          if (read[i]){
+              d = str_row(t, i);
+              strcat(s, d);
+              free(d);
+          }
+       return s;
+    }
+    free(s);
+    return str_column(t, read, col);
+        // printf("\n");
 }
 
 //removes begining and ending spaces
@@ -108,8 +139,8 @@ void set_val(struct table *t, int row, int col, int type, int tag, char *val){
 
 struct table *get_table(char *tname, struct database *db){
   for (int i = 0; i < db->num_tables; i ++)
-      if ( !strcmp(db->tables[i].name, tname) )
-          return db->tables + i;
+      if ( !strcmp(db->tables[i]->name, tname) )
+          return db->tables[i];
   return 0;
 }
 
@@ -152,11 +183,12 @@ char *create_table(char *str, struct database *db){
     char *s = malloc(BUFFER_SIZE);
     char *tname = rs( strsep(&str, "{") );
     if (get_table(tname, db)){
-      sprintf(s, "table: %s exists\n", tname);
-      return s;
+        sprintf(s, "table: %s exists\n", tname);
+        return s;
     }
 
-    struct table *t = db->tables + db->num_tables;
+    struct table *t = malloc(sizeof(struct table));
+    db->tables[ db->num_tables ] = t;
     db->num_tables ++;
 
     str = rs(str);
@@ -379,7 +411,7 @@ int *bool_or(struct table *t, char **piece, int c){
     // free(read);
 }
 
-char *read_spec(struct table *t, char *expr){
+char *read_spec(struct table *t, char *col, char *expr){
 
     char *s = malloc(BUFFER_SIZE);
     expr = rs(expr);
@@ -400,7 +432,15 @@ char *read_spec(struct table *t, char *expr){
     }
     free(piece);
     free(s);
-    s = str_table(t, read);
+    int index = -1;
+    if (col){
+        index = index_of(t, col);
+        if (index == -1){
+          strcpy(s, "read failed: dolumn does not exist\n");
+          return s;
+        }
+    }
+    s = str_table(t, read, index);
     free(read);
     return s;
 }
@@ -413,7 +453,7 @@ char *read_table(char *str, struct database *db){
     // printf("%s\n", db->tables[0].name);
     // print_table(&(db->tables[0]));
     // printf("[%s]\n", str);
-    char *tname = rs( strsep(&str, " {") );
+    char *tname = rs( strsep(&str, " .") );
     struct table *t = get_table(tname, db);
     if (!t){
         strcpy(s, "table does not exist\n");
@@ -422,31 +462,45 @@ char *read_table(char *str, struct database *db){
     // printf("[%s]\n", str);
     str = rs(str);
     // printf("[%s]\n", str);
-    if ( !strncmp(str, "all", 3) ){
+    char *col;
+    if ( !strncmp(str, "*", 1) ){
+        str ++;
+        col = 0;
         // printf("[%s]", str + 3);
-        if ( !str[3] ){
-            // printf("#");
-            int read[t->al->num_rows];
-            for (int i = 0; i < t->al->num_rows; i ++)
-                read[i] = 1;
-            free(s);
-            return str_table(t, read);
-        }
-        strsep(&str, " ");
-        str = rs(str);
-        char *piece;
-        while (piece = strsep(&str, ",")){
-            piece = rs(piece);
-            if ( !strncmp(piece, "where ", 6) ){
-                free(s);
-                return read_spec(t, piece + 6);
+
+
+        // strsep(&str, " ");
+    }
+    else {
+        col = strsep(&str, " ");
+    }
+    str = rs(str);
+    // printf("[%s]\n", col);
+
+    if ( !str || !*str){
+        int *read = calloc(t->al->num_rows, sizeof(int));
+        for (int i = 0; i < t->al->num_rows; i ++)
+            read[i] = 1;
+        // free(s);
+        int index = -1;
+        if (col){
+            index = index_of(t, col);
+            if (index == -1){
+                strcpy(s, "read failed: column does not exist\n");
+                return s;
             }
         }
-        // strsep(&str, " ");
-
+        // printf("%d\n", index);
+        free(s);
+        return str_table(t, read, index);
     }
-    free(s);
-    return 0;
+    if ( !strncmp(str, "where ", 6) ){
+        free(s);
+        return read_spec(t, col, str + 6);
+    }
+    printf("[%s]\n", str);
+    strcpy(s, "read failed: syntax error\n");
+    return s;
 
 }
 
@@ -576,13 +630,15 @@ char *drop(char *str, struct database *db){
     str = rs(str);
     int i;
     for (i = 0; i < db->num_tables; i ++)
-        if ( !strcmp(db->tables[i].name, str) )
-            t = db->tables + i;
+        if ( !strcmp(db->tables[i]->name, str) ){
+          t = db->tables[i];
+          break;
+        }
     if (!t){
         strcpy(s, "table does not exist\n");
         return s;
     }
-
+    free( db->tables[i] );
     for (int j = i; j < db->num_tables - 1; j ++)
         db->tables[i] = db->tables[i + 1];
     db->num_tables --;
@@ -693,20 +749,29 @@ char *execute(char *str, struct database *db){
     char *s;
     str = rs(str);
 
-    if (!strncmp(str, "create ", 7))
-        s = create_table(str + 7, db);
+    if (strlen(str) <= 5){
+        s = malloc(BUFFER_SIZE);
+        strcpy(s, "invalid command\n");
+    }
     else if (!strncmp(str, "read ", 5))
         s = read_table(str + 5, db);
+    else if (!strncmp(str, "drop ", 5))
+        s = drop(str + 5, db);
+    else if (!strncmp(str, "sort ", 5))
+        s = sort(str + 5, db);
+    else if (strlen(str) <= 7){
+        s = malloc(BUFFER_SIZE);
+        strcpy(s, "invalid command\n");
+    }
+    else if (!strncmp(str, "create ", 7))
+        s = create_table(str + 7, db);
     else if (!strncmp(str, "insert ", 7))
         s = insert(str + 7, db);
     else if (!strncmp(str, "update ", 7))
         s = update(str + 7, db);
     else if (!strncmp(str, "delete ", 7))
         s = delete(str + 7, db);
-    else if (!strncmp(str, "drop ", 5))
-        s = drop(str + 5, db);
-    else if (!strncmp(str, "sort ", 5))
-        s = sort(str + 5, db);
+
     else{
         s = malloc(BUFFER_SIZE);
         strcpy(s, "invalid command\n");

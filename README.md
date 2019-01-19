@@ -5,49 +5,63 @@ Ivan Zhang, Simon Berens, William Lu (Period 4)
 Simple CRUD Database System in C
 
 ### Query Syntax
+* Things inside `[]` are optional.
+* Things inside `<>` can vary.
+
 - Create
 
 ```
-create <tablename> {
-    <type> <colname> [<tags>],
-    [<type> <colname> [<tags>],]
+create <table_name> {
+    <type> <column_name> [<tag>],
+  [ <type> <column_name> [<tag>],
     ...
-};
+    <type> <column_name> [<tag>], ]
+}
 ```
 types: `int`, `double`, `string`
 
-tags: `-primarykey`, `-autoinc`, `default(<value>)`
+tags: `-primarykey`, `-autoinc`, `-default(<value>)`
 
 - Read
 
 ```
-read <tablename> [all] [where <expr>];
+read <table_name> * [where <expression0> [<boolean_operator> <expression0> ... ] ]
+read <table_name>.<column_name> [where <expression0> [<boolean_operator> <expression0> ... ] ]
 ```
 
-expressions: `col_name =/</> val
-              val =/</> val
-              col_name =/</> col_name`
+expressions:
+```
+column_name <operation> value
+value <operation> value
+column_name <operation> column_name
+```
+
+operations: `=`, `>`, `<`
+
+boolean operators: `&`, `|`
+- We only implemented and use single character because that's much easier to implement by `strsep()`.
 
 - Insert
 
 ```
-insert <tablename> {
-    (<colname>:<value>, [<colname>:<value>,] ...),
-    [(<colname>:<value>, [<colname>:<value>,] ...),]
+insert <table_name> {
+    (<column_name>:<value>, [<column_name>:<value>, ..., <column_name>:<value>])
+  [ (<column_name>:<value>, [<column_name>:<value>, ..., <column_name>:<value>])
     ...
-};
+    (<column_name>:<value>, [<column_name>:<value>, ..., <column_name>:<value>]) ]
+}
 ```
 
 - Update
 
-`update <tablename>.<colname> to <val> where <expr>;`
+`update <table_name>.<column_name> to <value> [where <expression0> [<boolean_operator> <expression0> ... ] ]`
 
 - Delete
 
-`delete <tablename> where <expr>;`
+`delete <table_name> [where <expression0> [<boolean_operator> <expression0> ... ] ]`
 
-`drop <tablename>;`
+`drop <table_name>;`
 
-- Load From File
-
-`source <filename>;`
+- Load Commands From File
+  - Commands must be separated by semicolons or newline.
+`source <file_name>;`
