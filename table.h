@@ -73,6 +73,8 @@ char *insert(char *str, struct database *db);
 
 char *delete(char *str, struct database *db);
 
+void kill_table(struct database *db, int i);
+
 char *drop(char *str, struct database *db);
 
 char *sort(char *str, struct database *db);

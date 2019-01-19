@@ -225,6 +225,12 @@ char *create_table(char *str, struct database *db){
             sprintf(s, "invalid type: %s\n", type[j]);
             return s;
         }
+        for (int k = 0; k < j; k ++)
+            if (!strcmp(t->col_names[k], name[j])){
+                kill_table(db, db->num_tables - 1);
+                sprintf(s, "duplicate columns: %s\n", name[j]);
+                return s;
+            }
         t->col_names[j] = name[j];
         if (tag = strsep(piece + j, " "))
             set_tag(t, j, tag);
@@ -622,6 +628,13 @@ char *delete(char *str, struct database *db){
     return 0;
 }
 
+void kill_table(struct database *db, int i){
+    free( db->tables[i] );
+    for (int j = i; j < db->num_tables - 1; j ++)
+        db->tables[i] = db->tables[i + 1];
+    db->num_tables --;
+}
+
 char *drop(char *str, struct database *db){
     char *s = malloc(BUFFER_SIZE);
     struct table *t = 0;
@@ -638,10 +651,7 @@ char *drop(char *str, struct database *db){
         strcpy(s, "table does not exist\n");
         return s;
     }
-    free( db->tables[i] );
-    for (int j = i; j < db->num_tables - 1; j ++)
-        db->tables[i] = db->tables[i + 1];
-    db->num_tables --;
+    kill_table(db, i);
     free(s);
     return 0;
 }
