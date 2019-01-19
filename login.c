@@ -1,4 +1,13 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+#include <termios.h>
+
+#include "table.h"
 #include "login.h"
+#include "commons.h"
+
 
 char* my_getpass (char *line, int n, FILE *stream)
 {
@@ -22,7 +31,7 @@ char* my_getpass (char *line, int n, FILE *stream)
     return nread;
 }
 
-int login(){
+int login(int db_sd){
   fflush(stdin);
 
   char student_name[256];
@@ -45,8 +54,14 @@ int login(){
   //}
 
   char user_pass[1000];
-  sprintf(user_pass, "read usernames * where username = %s & password = ", student_name, pass);
-  printf("%s", execute(user_pass, db));
+  sprintf(user_pass, "read usernames * where username = %s & password = %s", student_name, pass);
+  //printf("%s", execute(user_pass, db));
+
+  error_check("sending", (int) send(db_sd, user_pass, 1000, 0));
+  char *response_buf = calloc(1000, sizeof(char));
+  recv(db_sd, response_buf, 1000, 0);
+
+
 
 
   return 0;
@@ -96,27 +111,4 @@ int registerr(){
   printf("Success: %s, %s, %s\n", student_name, pass, confirm_pass);
 
   return 0;
-}
-
-int log_or_reg(){
-  char input[256];
-
-  printf("Do you have an account (y/n): ");
-  fgets(input, 256, stdin);
-
-
-  while(strncmp(input, "y", 1) && strncmp(input, "n", 1)){
-    printf("Try again! Enter 'y' or 'n': ");
-    fgets(input, 256, stdin);
-  }
-
-
-  if (!strncmp(input, "y", 1)){
-    return login();
-  }
-  else{
-    return registerr();
-  }
-
-
 }
